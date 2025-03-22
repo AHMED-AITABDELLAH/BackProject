@@ -7,6 +7,8 @@ import lombok.Getter;
 import lombok.Setter;
 
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 @Getter
@@ -43,5 +45,13 @@ public class LocalUser {
     @Column(name = "password", nullable = false)
     private String password;
 
+
+    @Column(nullable = false)
+    private Boolean isVerified = false;
+
+
+    @OrderBy("id desc")
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<VerificationToken> verificationTokens = new ArrayList<>();
 
 }

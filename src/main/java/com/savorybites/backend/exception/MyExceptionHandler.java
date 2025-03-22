@@ -90,4 +90,34 @@ public class MyExceptionHandler extends ResponseEntityExceptionHandler {
         );
     }
 
+    //HANDLING EmailFailureException
+    @ExceptionHandler(value = {EmailFailureException.class})
+    public ResponseEntity<Object> EmailFailureException
+    (EmailFailureException exception)
+    {
+        String errorMsgDesc=exception.getLocalizedMessage();
+        if(errorMsgDesc==null) errorMsgDesc=exception.toString();
+        ErrorMessage errorMessage = new ErrorMessage(errorMsgDesc,new Date());
+
+
+        return new ResponseEntity<>(
+                errorMessage,new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR
+        );
+    }
+
+    //HANDLING UserNotVerified
+    @ExceptionHandler(value = {UserNotVerified.class})
+    public ResponseEntity<Object> UserNotVerified
+    (UserNotVerified exception)
+    {
+        String errorMsgDesc=exception.getLocalizedMessage();
+        if(errorMsgDesc==null) errorMsgDesc=exception.toString();
+        ErrorMessage errorMessage = new ErrorMessage(errorMsgDesc,new Date());
+
+
+        return new ResponseEntity<>(
+                errorMessage,new HttpHeaders(), HttpStatus.FORBIDDEN
+        );
+    }
+
 }

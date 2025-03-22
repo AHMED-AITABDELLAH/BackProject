@@ -14,6 +14,7 @@ public class JWTService {
 
 
     private static final String USERNAME_KEY = "username";
+    private static final String EMAIL_KEY = "email";
 
     @Value("${jwt.algorithm-key}")
     private String algorithmKey;
@@ -37,7 +38,15 @@ public class JWTService {
 
     public String generateToken(LocalUser user){
         return JWT.create()
-                .withClaim(USERNAME_KEY,user.getEmail())
+                .withClaim(USERNAME_KEY,user.getId().toString())
+                .withExpiresAt(new Date(System.currentTimeMillis() + (expiryInSeconds*1000) ))
+                .withIssuer(issuer)
+                .sign(myAlgorithm);
+    }
+
+    public String generateVerificationJWT(LocalUser user){
+        return JWT.create()
+                .withClaim(EMAIL_KEY,user.getEmail())
                 .withExpiresAt(new Date(System.currentTimeMillis() + (expiryInSeconds*1000) ))
                 .withIssuer(issuer)
                 .sign(myAlgorithm);

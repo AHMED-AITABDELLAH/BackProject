@@ -1,7 +1,7 @@
 package com.savorybites.backend.security;
 
 import com.savorybites.backend.model.LocalUser;
-import com.savorybites.backend.repository.LocalUserRepository;
+import com.savorybites.backend.repository.UserRepository;
 import com.savorybites.backend.service.JWTService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -21,10 +21,10 @@ import java.util.Optional;
 public class JWTRequestFilter extends OncePerRequestFilter {
 
     private final JWTService jwtService;
-    private final LocalUserRepository localUserRepository;
-    public JWTRequestFilter(JWTService jwtService, LocalUserRepository localUserRepository) {
+    private final UserRepository userRepository;
+    public JWTRequestFilter(JWTService jwtService, UserRepository userRepository) {
         this.jwtService = jwtService;
-        this.localUserRepository = localUserRepository;
+        this.userRepository = userRepository;
     }
 
     @Override
@@ -39,7 +39,7 @@ public class JWTRequestFilter extends OncePerRequestFilter {
         if(tokenHeader != null && tokenHeader.startsWith("Bearer ")){
             String token = tokenHeader.substring(7);
             String email = jwtService.getUsername(token);
-            Optional<LocalUser> userOptional=localUserRepository.findByEmailIgnoreCase(email);
+            Optional<LocalUser> userOptional= userRepository.findByEmailIgnoreCase(email);
             if(userOptional.isPresent()){
                 LocalUser user = userOptional.get();
                 UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken
