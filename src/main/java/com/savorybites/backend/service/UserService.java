@@ -52,8 +52,7 @@ public class UserService {
 
 
         LocalUser newUser = new LocalUser();
-        newUser.setFirstName(registrationBody.getFirstName());
-        newUser.setLastName(registrationBody.getLastName());
+        newUser.setUsername(registrationBody.getUsername());
         newUser.setEmail(registrationBody.getEmail());
         //Crypting the password before storing it
         newUser.setPassword(encryptionService.encryptPassword(registrationBody.getPassword()));

@@ -27,6 +27,9 @@ public class LocalUser {
     @Column(name="lname")
     private String lastName;
 
+    @Column(name = "username")
+    private String username;
+
     @Column(name="phone")
     private String phone;
 
@@ -49,7 +52,7 @@ public class LocalUser {
     @Column(nullable = false)
     private Boolean isVerified = false;
 
-
+    @JsonIgnore
     @OrderBy("id desc")
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<VerificationToken> verificationTokens = new ArrayList<>();

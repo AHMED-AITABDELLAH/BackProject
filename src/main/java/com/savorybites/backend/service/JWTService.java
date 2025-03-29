@@ -8,12 +8,13 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.Date;
+import java.util.UUID;
 
 @Service
 public class JWTService {
 
 
-    private static final String USERNAME_KEY = "username";
+    private static final String ID_KEY = "id";
     private static final String EMAIL_KEY = "email";
 
     @Value("${jwt.algorithm-key}")
@@ -38,7 +39,7 @@ public class JWTService {
 
     public String generateToken(LocalUser user){
         return JWT.create()
-                .withClaim(USERNAME_KEY,user.getId().toString())
+                .withClaim(ID_KEY,user.getId().toString())
                 .withExpiresAt(new Date(System.currentTimeMillis() + (expiryInSeconds*1000) ))
                 .withIssuer(issuer)
                 .sign(myAlgorithm);
@@ -53,8 +54,8 @@ public class JWTService {
     }
 
 
-    public String getUsername(String token){
-        return JWT.decode(token).getClaim(USERNAME_KEY).asString();
+    public UUID getUserID(String token){
+        return JWT.decode(token).getClaim(ID_KEY).as(UUID.class);
     }
 
 

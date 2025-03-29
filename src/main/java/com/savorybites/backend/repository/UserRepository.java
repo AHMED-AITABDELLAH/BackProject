@@ -13,4 +13,7 @@ public interface UserRepository extends JpaRepository<LocalUser, UUID> {
 
 
     Optional<LocalUser> findByEmailIgnoreCase(String email);
+
+    @Override
+    Optional<LocalUser> findById(UUID uuid);
 }
