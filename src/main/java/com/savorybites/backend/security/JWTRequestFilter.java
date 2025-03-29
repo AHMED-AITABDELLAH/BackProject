@@ -1,7 +1,9 @@
 package com.savorybites.backend.security;
 
 import com.savorybites.backend.model.LocalUser;
+import com.savorybites.backend.repository.BlacklistedTokenRepository;
 import com.savorybites.backend.repository.UserRepository;
+import com.savorybites.backend.service.BlacklistedTokenService;
 import com.savorybites.backend.service.JWTService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -23,9 +25,14 @@ public class JWTRequestFilter extends OncePerRequestFilter {
 
     private final JWTService jwtService;
     private final UserRepository userRepository;
-    public JWTRequestFilter(JWTService jwtService, UserRepository userRepository) {
+    private final BlacklistedTokenRepository blacklistedTokenRepository;
+    private final BlacklistedTokenService blacklistedTokenService;
+
+    public JWTRequestFilter(JWTService jwtService, UserRepository userRepository, BlacklistedTokenRepository blacklistedTokenRepository, BlacklistedTokenService blacklistedTokenService) {
         this.jwtService = jwtService;
         this.userRepository = userRepository;
+        this.blacklistedTokenRepository = blacklistedTokenRepository;
+        this.blacklistedTokenService = blacklistedTokenService;
     }
 
     @Override
@@ -39,6 +46,13 @@ public class JWTRequestFilter extends OncePerRequestFilter {
         String tokenHeader = request.getHeader("Authorization");
         if(tokenHeader != null && tokenHeader.startsWith("Bearer ")){
             String token = tokenHeader.substring(7);
+
+            if(blacklistedTokenService.isTokenBlacklisted(token)){
+
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                response.getWriter().write("Token is invalidated, please login again.");
+                return;
+            }
             UUID userID = jwtService.getUserID(token);
             Optional<LocalUser> userOptional= userRepository.findById(userID);
             if(userOptional.isPresent()){
