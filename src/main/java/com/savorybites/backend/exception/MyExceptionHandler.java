@@ -116,7 +116,23 @@ public class MyExceptionHandler extends ResponseEntityExceptionHandler {
 
 
         return new ResponseEntity<>(
-                errorMessage,new HttpHeaders(), HttpStatus.FORBIDDEN
+                errorMessage,new HttpHeaders(), HttpStatus.UNAUTHORIZED
+        );
+    }
+
+
+    //HANDLING EmailAlreadySentException
+    @ExceptionHandler(value = {EmailAlreadySentException.class})
+    public ResponseEntity<Object> EmailAlreadySentException
+            (EmailAlreadySentException exception)
+    {
+        String errorMsgDesc=exception.getLocalizedMessage();
+        if(errorMsgDesc==null) errorMsgDesc=exception.toString();
+        ErrorMessage errorMessage = new ErrorMessage(errorMsgDesc,new Date());
+
+
+        return new ResponseEntity<>(
+                errorMessage,new HttpHeaders(), HttpStatus.CONFLICT
         );
     }
 

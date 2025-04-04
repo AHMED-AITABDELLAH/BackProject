@@ -17,6 +17,8 @@ public class BlacklistedTokenService {
 
 
     public void addBlacklistedToken(String token,int expiryMinutes){
+        //Here We delete the expired token before creating new one
+        blacklistedTokenRepository.deleteByExpiryDateBefore(Instant.now());
         BlacklistedToken blacklistedToken=new BlacklistedToken();
         blacklistedToken.setToken(token);
         blacklistedToken.setExpiryDate(Instant.now().plusSeconds(expiryMinutes * 60));

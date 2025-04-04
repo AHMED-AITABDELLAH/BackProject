@@ -5,6 +5,7 @@ import com.savorybites.backend.model.VerificationToken;
 import org.springframework.data.repository.ListCrudRepository;
 import org.springframework.lang.Nullable;
 
+import java.sql.Timestamp;
 import java.util.Optional;
 
 public interface VerificationTokenRepository extends ListCrudRepository<VerificationToken,Long> {
@@ -14,4 +15,6 @@ public interface VerificationTokenRepository extends ListCrudRepository<Verifica
     void deleteByUser(LocalUser User);
 
     Optional<VerificationToken> findByToken(String token);
+
+    void deleteByCreationTimestampBefore(Timestamp creationTimestamp);
 }

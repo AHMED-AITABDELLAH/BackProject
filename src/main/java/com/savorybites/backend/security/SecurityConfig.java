@@ -29,7 +29,15 @@ public class SecurityConfig {
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/auth/register","/auth/login","/auth/verify").permitAll()
+                        .requestMatchers
+                                (
+                                        "/auth/register",
+                                        "/auth/verifyEmail",
+                                        "/auth/login",
+                                        "/auth/verifyPassword",
+                                        "auth/forgotPassword",
+                                        "auth/resetPassword"
+                                ).permitAll()
                         .anyRequest().authenticated() // Allow all requests without authentication
                 )
                 .addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class)

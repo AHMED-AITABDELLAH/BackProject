@@ -3,9 +3,12 @@ package com.savorybites.backend.repository;
 import com.savorybites.backend.model.BlacklistedToken;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import java.time.Instant;
 import java.util.Optional;
 
 public interface BlacklistedTokenRepository extends JpaRepository<BlacklistedToken, Long> {
 
     Optional<BlacklistedToken> findByToken(String token);
+
+    void deleteByExpiryDateBefore(Instant expiryDate);
 }

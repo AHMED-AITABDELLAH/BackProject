@@ -2,12 +2,11 @@ package com.savorybites.backend.service;
 
 import com.savorybites.backend.api.model.LoginBody;
 import com.savorybites.backend.api.model.RegistrationBody;
-import com.savorybites.backend.exception.PasswordIncorrectException;
-import com.savorybites.backend.exception.UserAlreadyExistsException;
-import com.savorybites.backend.exception.UserNotFoundException;
-import com.savorybites.backend.exception.UserNotVerified;
+import com.savorybites.backend.exception.*;
 import com.savorybites.backend.model.LocalUser;
+import com.savorybites.backend.model.PasswordResetToken;
 import com.savorybites.backend.model.VerificationToken;
+import com.savorybites.backend.repository.PasswordResetTokenRepository;
 import com.savorybites.backend.repository.UserRepository;
 import com.savorybites.backend.repository.VerificationTokenRepository;
 import jakarta.transaction.Transactional;
@@ -15,7 +14,9 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.stereotype.Service;
 
 import java.sql.Timestamp;
+import java.time.Instant;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 @Service
@@ -26,17 +27,19 @@ public class UserService {
     private final JWTService jwtService;
     private final EmailService emailService;
     private final VerificationTokenRepository verificationTokenRepository;
+    private final PasswordResetTokenRepository passwordResetTokenRepository;
 
     public UserService(UserRepository userRepository,
                        EncryptionService encryptionService,
                        JWTService jwtService,
                        EmailService emailService,
-                       VerificationTokenRepository verificationTokenRepository) {
+                       VerificationTokenRepository verificationTokenRepository, PasswordResetTokenRepository passwordResetTokenRepository) {
         this.userRepository = userRepository;
         this.encryptionService = encryptionService;
         this.jwtService = jwtService;
         this.emailService = emailService;
         this.verificationTokenRepository = verificationTokenRepository;
+        this.passwordResetTokenRepository = passwordResetTokenRepository;
     }
 
     /// ////////////////////////////////////////////SignUP-Registration//////////////////////////////////////
@@ -56,6 +59,8 @@ public class UserService {
         newUser.setEmail(registrationBody.getEmail());
         //Crypting the password before storing it
         newUser.setPassword(encryptionService.encryptPassword(registrationBody.getPassword()));
+        //Here we delelte old verification token
+        verificationTokenRepository.deleteByCreationTimestampBefore(Timestamp.from(Instant.now()));
         //here we send a verification email to the user to confirm it
         VerificationToken verificationToken = createVerificationToken(newUser);
         emailService.sendVerificationEmail(verificationToken);
@@ -64,15 +69,55 @@ public class UserService {
         userRepository.save(newUser);
         verificationTokenRepository.save(verificationToken);
     }
-    /// //////////Generating  verification JWT upon Registering/Login
+    /// //////////Generating  verification JWT upon Registering/Login////////////////////////
     private VerificationToken createVerificationToken(LocalUser user){
         VerificationToken verificationToken = new VerificationToken();
         verificationToken.setToken(jwtService.generateVerificationJWT(user));
         verificationToken.setCreationTimestamp(new Timestamp(System.currentTimeMillis()));
         verificationToken.setUser(user);
         return verificationToken;
+    }
+
+    /// ////////////////////////////Generating  Password Reset Token //////////////////////////////
+    private PasswordResetToken createPasswordResetToken(LocalUser user){
+        Optional<PasswordResetToken> opToken =passwordResetTokenRepository.findFirstByUserOrderByExpiryDateDesc(user);
+        if(opToken.isPresent()){
+            PasswordResetToken passToken = opToken.get();
+            if(passToken.getExpiryDate().isAfter(Instant.now()))
+                //we return null because there is a valid token
+                // (should wait for the expiry to retry)
+                return null;
+            passwordResetTokenRepository.delete(passToken);
+        }
+        PasswordResetToken passwordResetToken = new PasswordResetToken();
+        passwordResetToken.setToken(jwtService.generatePasswordResetJWT(user));
+        passwordResetToken.setExpiryDate(Instant.now().plusSeconds(15 * 60));
+        passwordResetToken.setUser(user);
+        passwordResetTokenRepository.save(passwordResetToken);
+        return passwordResetToken;
 
     }
+    /// //////////////////////////forgot Passowrd/////////////////////////////////
+    public void forgotPassword(String email)
+            throws UserNotVerified, UserNotFoundException, EmailAlreadySentException {
+
+        LocalUser user = userRepository.findByEmailIgnoreCase(email)
+                .orElseThrow(UserNotFoundException::new); // Throw if user doesn't exist
+
+        if (!user.getIsVerified()) {
+            throw new UserNotVerified(); // Ensure user is verified
+        }
+
+        PasswordResetToken token = createPasswordResetToken(user);
+        if (token == null) {
+            throw new EmailAlreadySentException(); // Token already exists and is valid
+        }
+
+        emailService.sendPasswordResetEmail(token);
+    }
+
+
+
     /// ///////////////////// Verify User/////////////////////
     //Anotated with this because we are modifying the data
     @Transactional
