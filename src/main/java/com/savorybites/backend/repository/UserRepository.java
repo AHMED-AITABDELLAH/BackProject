@@ -5,15 +5,13 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
-import java.util.UUID;
 
 
 @Repository
-public interface UserRepository extends JpaRepository<LocalUser, UUID> {
+public interface UserRepository extends JpaRepository<LocalUser, Long> {
 
 
     Optional<LocalUser> findByEmailIgnoreCase(String email);
 
-    @Override
-    Optional<LocalUser> findById(UUID uuid);
+    Optional<LocalUser> findLocalUserById(Long id);
 }

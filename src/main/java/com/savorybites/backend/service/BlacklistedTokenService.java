@@ -1,7 +1,7 @@
 package com.savorybites.backend.service;
 
-import com.savorybites.backend.model.BlacklistedToken;
-import com.savorybites.backend.repository.BlacklistedTokenRepository;
+import com.savorybites.backend.model.verificationModels.BlacklistedToken;
+import com.savorybites.backend.repository.VerificationRepository.BlacklistedTokenRepository;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;

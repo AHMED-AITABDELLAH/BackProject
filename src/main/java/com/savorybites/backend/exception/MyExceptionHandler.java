@@ -136,4 +136,20 @@ public class MyExceptionHandler extends ResponseEntityExceptionHandler {
         );
     }
 
+
+
+    //HANDLING UserNotApproved
+    @ExceptionHandler(value = {UserNotApproved.class})
+    public ResponseEntity<Object> UserNotApproved
+    (UserNotApproved exception)
+    {
+        String errorMsgDesc=exception.getLocalizedMessage();
+        if(errorMsgDesc==null) errorMsgDesc=exception.toString();
+        ErrorMessage errorMessage = new ErrorMessage(errorMsgDesc,new Date());
+
+
+        return new ResponseEntity<>(
+                errorMessage,new HttpHeaders(), HttpStatus.UNAUTHORIZED
+        );
+    }
 }

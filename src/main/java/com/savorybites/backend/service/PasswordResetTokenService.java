@@ -1,9 +1,11 @@
 package com.savorybites.backend.service;
 
 import com.savorybites.backend.model.LocalUser;
-import com.savorybites.backend.model.PasswordResetToken;
-import com.savorybites.backend.repository.PasswordResetTokenRepository;
+import com.savorybites.backend.model.Restaurant;
+import com.savorybites.backend.model.verificationModels.PasswordResetToken;
+import com.savorybites.backend.repository.VerificationRepository.PasswordResetTokenRepository;
 import com.savorybites.backend.repository.UserRepository;
+import com.savorybites.backend.repository.VerificationRepository.RestaurantRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
@@ -16,12 +18,16 @@ public class PasswordResetTokenService {
     private final PasswordResetTokenRepository passwordResetTokenRepository;
     private final EncryptionService encryptionService;
     private final UserRepository userRepository;
+    private final JWTService jwtService;
+    private final RestaurantRepository restaurantRepository;
 
 
-    public PasswordResetTokenService(PasswordResetTokenRepository passwordResetTokenRepository, EncryptionService encryptionService, UserRepository userRepository) {
+    public PasswordResetTokenService(PasswordResetTokenRepository passwordResetTokenRepository, EncryptionService encryptionService, UserRepository userRepository, JWTService jwtService, RestaurantRepository restaurantRepository) {
         this.passwordResetTokenRepository = passwordResetTokenRepository;
         this.encryptionService = encryptionService;
         this.userRepository = userRepository;
+        this.jwtService = jwtService;
+        this.restaurantRepository = restaurantRepository;
     }
 
     public boolean isResetTokenValid(String token){
@@ -37,10 +43,20 @@ public class PasswordResetTokenService {
     public boolean resetPassword(String token, String newPassword) {
         if (isResetTokenValid(token)) {
             PasswordResetToken resetToken = passwordResetTokenRepository.findByToken(token).get();
-            // Reset the user's password
-            LocalUser user = resetToken.getUser();
-            user.setPassword(encryptionService.encryptPassword(newPassword));
-            userRepository.save(user);
+            String role=jwtService.getRoleFromToken(token);
+            if("ROLE_USER".equals(role)){
+                // Reset the user's password
+                LocalUser user = resetToken.getUser();
+                user.setPassword(encryptionService.encryptPassword(newPassword));
+                userRepository.save(user);
+            } else if ("ROLE_RESTAURANT".equals(role)) {
+                // Reset the restaurant's password
+
+                Restaurant restaurant = resetToken.getRestaurant();
+                restaurant.setPassword(encryptionService.encryptPassword(newPassword));
+                restaurantRepository.save(restaurant);
+            }
+
 
             // Delete the token after successful reset
             passwordResetTokenRepository.delete(resetToken);

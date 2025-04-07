@@ -1,12 +1,12 @@
-package com.savorybites.backend.model;
+package com.savorybites.backend.model.verificationModels;
 
+import com.savorybites.backend.model.LocalUser;
+import com.savorybites.backend.model.Restaurant;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.List;
 
 @Getter
 @Setter
@@ -27,5 +27,9 @@ public class PasswordResetToken {
     @ManyToOne
     @JoinColumn(name = "local_user_id")
     private LocalUser user;
+
+    @ManyToOne
+    @JoinColumn(name = "restaurant_id")
+    private Restaurant restaurant;
 
 }

@@ -1,4 +1,4 @@
-package com.savorybites.backend.model;
+package com.savorybites.backend.model.verificationModels;
 
 import jakarta.persistence.*;
 import lombok.Getter;

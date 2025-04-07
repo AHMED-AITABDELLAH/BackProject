@@ -1,22 +1,23 @@
 package com.savorybites.backend.service;
 
 import com.savorybites.backend.api.model.LoginBody;
-import com.savorybites.backend.api.model.RegistrationBody;
+import com.savorybites.backend.api.model.UserRegistrationBody;
 import com.savorybites.backend.exception.*;
 import com.savorybites.backend.model.LocalUser;
-import com.savorybites.backend.model.PasswordResetToken;
-import com.savorybites.backend.model.VerificationToken;
-import com.savorybites.backend.repository.PasswordResetTokenRepository;
+import com.savorybites.backend.model.Restaurant;
+import com.savorybites.backend.model.Role;
+import com.savorybites.backend.model.verificationModels.PasswordResetToken;
+import com.savorybites.backend.model.verificationModels.VerificationToken;
+import com.savorybites.backend.repository.VerificationRepository.PasswordResetTokenRepository;
 import com.savorybites.backend.repository.UserRepository;
-import com.savorybites.backend.repository.VerificationTokenRepository;
+import com.savorybites.backend.repository.VerificationRepository.RestaurantRepository;
+import com.savorybites.backend.repository.VerificationRepository.VerificationTokenRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.stereotype.Service;
 
-import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 
 @Service
@@ -28,39 +29,43 @@ public class UserService {
     private final EmailService emailService;
     private final VerificationTokenRepository verificationTokenRepository;
     private final PasswordResetTokenRepository passwordResetTokenRepository;
+    private final RestaurantRepository restaurantRepository;
 
     public UserService(UserRepository userRepository,
                        EncryptionService encryptionService,
                        JWTService jwtService,
                        EmailService emailService,
-                       VerificationTokenRepository verificationTokenRepository, PasswordResetTokenRepository passwordResetTokenRepository) {
+                       VerificationTokenRepository verificationTokenRepository, PasswordResetTokenRepository passwordResetTokenRepository, RestaurantRepository restaurantRepository) {
         this.userRepository = userRepository;
         this.encryptionService = encryptionService;
         this.jwtService = jwtService;
         this.emailService = emailService;
         this.verificationTokenRepository = verificationTokenRepository;
         this.passwordResetTokenRepository = passwordResetTokenRepository;
+        this.restaurantRepository = restaurantRepository;
     }
 
     /// ////////////////////////////////////////////SignUP-Registration//////////////////////////////////////
-    public void Registration(RegistrationBody registrationBody)
+    public void Registration(UserRegistrationBody userRegistrationBody)
             throws UserAlreadyExistsException {
 
         if (
                 (userRepository
-                        .findByEmailIgnoreCase(registrationBody.getEmail()))
+                        .findByEmailIgnoreCase(userRegistrationBody.getEmail()))
                         .isPresent()
         )
             throw new UserAlreadyExistsException();
 
 
         LocalUser newUser = new LocalUser();
-        newUser.setUsername(registrationBody.getUsername());
-        newUser.setEmail(registrationBody.getEmail());
-        //Crypting the password before storing it
-        newUser.setPassword(encryptionService.encryptPassword(registrationBody.getPassword()));
-        //Here we delelte old verification token
-        verificationTokenRepository.deleteByCreationTimestampBefore(Timestamp.from(Instant.now()));
+        newUser.setRole(Role.ROLE_USER);
+        newUser.setUsername(userRegistrationBody.getUsername());
+        newUser.setEmail(userRegistrationBody.getEmail());
+        newUser.setIsVerified(false);
+        //Encrypting the password before storing it
+        newUser.setPassword(encryptionService.encryptPassword(userRegistrationBody.getPassword()));
+        //Here we delete old verification token
+        verificationTokenRepository.deleteByExpiryDateBefore(Instant.now());
         //here we send a verification email to the user to confirm it
         VerificationToken verificationToken = createVerificationToken(newUser);
         emailService.sendVerificationEmail(verificationToken);
@@ -73,7 +78,7 @@ public class UserService {
     private VerificationToken createVerificationToken(LocalUser user){
         VerificationToken verificationToken = new VerificationToken();
         verificationToken.setToken(jwtService.generateVerificationJWT(user));
-        verificationToken.setCreationTimestamp(new Timestamp(System.currentTimeMillis()));
+        verificationToken.setExpiryDate(Instant.now().plusSeconds(3600));
         verificationToken.setUser(user);
         return verificationToken;
     }
@@ -97,7 +102,7 @@ public class UserService {
         return passwordResetToken;
 
     }
-    /// //////////////////////////forgot Passowrd/////////////////////////////////
+    /// //////////////////////////forgot Password/////////////////////////////////
     public void forgotPassword(String email)
             throws UserNotVerified, UserNotFoundException, EmailAlreadySentException {
 
@@ -113,29 +118,42 @@ public class UserService {
             throw new EmailAlreadySentException(); // Token already exists and is valid
         }
 
-        emailService.sendPasswordResetEmail(token);
+        emailService.sendPasswordResetEmailForUser(token);
     }
 
 
 
     /// ///////////////////// Verify User/////////////////////
-    //Anotated with this because we are modifying the data
+    //Annotated with this because we are modifying the data
     @Transactional
-    public boolean verifyUser(String token){
+    public boolean verifyAccount(String token){
 
         //We check if the token exist in the DB
         Optional<VerificationToken>  optionalToken = verificationTokenRepository.findByToken(token);
         if(optionalToken.isPresent()){
             //We get the VerificationToken and the user associated with it
             VerificationToken verificationToken = optionalToken.get();
-            LocalUser user = verificationToken.getUser();
-            //We check if the user is already verified
-            if(!user.getIsVerified()){
-                user.setIsVerified(true);
-                 userRepository.save(user);
-                verificationTokenRepository.deleteByUser(user);
-                return true;
+            String role=jwtService.getRoleFromToken(token);
+            if ("ROLE_USER".equals(role)){
+                LocalUser user = verificationToken.getUser();
+                //We check if the user is already verified
+                if(!user.getIsVerified()){
+                    user.setIsVerified(true);
+                    userRepository.save(user);
+                    verificationTokenRepository.deleteByUser(user);
+                    return true;
+                }
+            } else if ("ROLE_RESTAURANT".equals(role)) {
+                Restaurant restaurant = verificationToken.getRestaurant();
+                //We check if the user is already verified
+                if(!restaurant.getIsVerified()){
+                    restaurant.setIsVerified(true);
+                    restaurantRepository.save(restaurant);
+                    verificationTokenRepository.deleteByRestaurant(restaurant);
+                    return true;
+                }
             }
+
 
         }
         return false;
@@ -159,15 +177,15 @@ public class UserService {
                     //We generate the JWT
                     return jwtService.generateToken(user);
                 else{
-                    //We get all the Verificationtokens associated with this user
+                    //We get all the VerificationTokens associated with this user
                     List<VerificationToken> verificationTokens = user.getVerificationTokens();
                     //We check if the user has zero verification tokens or expired one
                     if(
                             verificationTokens.isEmpty()
                                     ||
                             verificationTokens.get(verificationTokens.size()-1)
-                                    .getCreationTimestamp()
-                                    .before(new Timestamp(System.currentTimeMillis() - 3600*1000))
+                                    .getExpiryDate()
+                                    .isBefore(Instant.now())
                     )
                     //We create a new Verification Token we save it in the DB
                     {

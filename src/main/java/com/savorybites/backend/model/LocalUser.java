@@ -1,6 +1,7 @@
 package com.savorybites.backend.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.savorybites.backend.model.verificationModels.VerificationToken;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.Getter;
@@ -9,7 +10,6 @@ import lombok.Setter;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 
 @Getter
 @Setter
@@ -17,9 +17,13 @@ import java.util.UUID;
 @Table(name = "local_user")
 public class LocalUser {
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.AUTO)
     @Column(name = "id", nullable = false,unique = true)
-    private UUID id;
+    private Long id;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "role")
+    private Role role;
 
     @Column(name="fname")
     private String firstName;
@@ -52,10 +56,18 @@ public class LocalUser {
     @Column(nullable = false)
     private Boolean isVerified = false;
 
+
+
     @JsonIgnore
     @OrderBy("id desc")
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<VerificationToken> verificationTokens = new ArrayList<>();
 
 
+
+    @PrePersist
+    protected void onCreate() {
+        if(isVerified == null)
+            isVerified = false;
+    }
 }

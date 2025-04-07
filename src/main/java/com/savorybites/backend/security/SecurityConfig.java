@@ -8,7 +8,6 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.security.web.authentication.logout.LogoutHandler;
 
 @Configuration
 public class SecurityConfig {
@@ -31,13 +30,16 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers
                                 (
-                                        "/auth/register",
+                                        "/auth/user/**",
+                                        "/auth/restaurant/**",
                                         "/auth/verifyEmail",
-                                        "/auth/login",
-                                        "/auth/verifyPassword",
-                                        "auth/forgotPassword",
-                                        "auth/resetPassword"
+                                        "/auth/forgotPassword",
+                                        "/auth/resetPassword",
+                                        "/admin/**"
                                 ).permitAll()
+                        .requestMatchers("/user/**").hasRole("USER")
+                        .requestMatchers("/admin/**").hasRole("ADMIN")
+                        .requestMatchers("/restaurant/**").hasRole("RESTAURANT")
                         .anyRequest().authenticated() // Allow all requests without authentication
                 )
                 .addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class)

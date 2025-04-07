@@ -8,7 +8,7 @@ import lombok.Setter;
 @Setter
 @Getter
 @AllArgsConstructor
-public class RegistrationBody {
+public class UserRegistrationBody {
 
     private String username;
     private String email;

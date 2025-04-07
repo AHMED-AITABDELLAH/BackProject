@@ -1,6 +1,6 @@
-package com.savorybites.backend.repository;
+package com.savorybites.backend.repository.VerificationRepository;
 
-import com.savorybites.backend.model.BlacklistedToken;
+import com.savorybites.backend.model.verificationModels.BlacklistedToken;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.time.Instant;

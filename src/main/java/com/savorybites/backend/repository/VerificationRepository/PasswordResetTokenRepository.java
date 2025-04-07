@@ -1,9 +1,9 @@
-package com.savorybites.backend.repository;
+package com.savorybites.backend.repository.VerificationRepository;
 import com.savorybites.backend.model.LocalUser;
-import com.savorybites.backend.model.PasswordResetToken;
+import com.savorybites.backend.model.Restaurant;
+import com.savorybites.backend.model.verificationModels.PasswordResetToken;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-import java.util.List;
 import java.util.Optional;
 
 public interface PasswordResetTokenRepository extends JpaRepository<PasswordResetToken, Long> {
@@ -12,4 +12,7 @@ public interface PasswordResetTokenRepository extends JpaRepository<PasswordRese
 
 
     Optional<PasswordResetToken> findFirstByUserOrderByExpiryDateDesc(LocalUser user);
+
+    Optional<PasswordResetToken> findFirstByRestaurantOrderByExpiryDateDesc(Restaurant restaurant);
+
 }
