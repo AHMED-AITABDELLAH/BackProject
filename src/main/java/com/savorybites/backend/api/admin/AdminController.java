@@ -1,7 +1,7 @@
 package com.savorybites.backend.api.admin;
 import com.savorybites.backend.model.Restaurant;
 import com.savorybites.backend.model.verificationModels.VerificationToken;
-import com.savorybites.backend.repository.VerificationRepository.RestaurantRepository;
+import com.savorybites.backend.repository.RestaurantRepository;
 import com.savorybites.backend.repository.VerificationRepository.VerificationTokenRepository;
 import com.savorybites.backend.service.EmailService;
 import com.savorybites.backend.service.RestaurantService;
@@ -13,8 +13,6 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
-
-import java.util.UUID;
 
 @RestController
 @RequestMapping("/admin")

@@ -4,7 +4,7 @@ import com.savorybites.backend.model.LocalUser;
 import com.savorybites.backend.model.Restaurant;
 import com.savorybites.backend.repository.VerificationRepository.BlacklistedTokenRepository;
 import com.savorybites.backend.repository.UserRepository;
-import com.savorybites.backend.repository.VerificationRepository.RestaurantRepository;
+import com.savorybites.backend.repository.RestaurantRepository;
 import com.savorybites.backend.service.BlacklistedTokenService;
 import com.savorybites.backend.service.JWTService;
 import jakarta.servlet.FilterChain;

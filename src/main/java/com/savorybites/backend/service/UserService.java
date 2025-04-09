@@ -10,7 +10,7 @@ import com.savorybites.backend.model.verificationModels.PasswordResetToken;
 import com.savorybites.backend.model.verificationModels.VerificationToken;
 import com.savorybites.backend.repository.VerificationRepository.PasswordResetTokenRepository;
 import com.savorybites.backend.repository.UserRepository;
-import com.savorybites.backend.repository.VerificationRepository.RestaurantRepository;
+import com.savorybites.backend.repository.RestaurantRepository;
 import com.savorybites.backend.repository.VerificationRepository.VerificationTokenRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.security.authentication.BadCredentialsException;

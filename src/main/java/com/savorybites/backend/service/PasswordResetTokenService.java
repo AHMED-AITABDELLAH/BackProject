@@ -5,7 +5,7 @@ import com.savorybites.backend.model.Restaurant;
 import com.savorybites.backend.model.verificationModels.PasswordResetToken;
 import com.savorybites.backend.repository.VerificationRepository.PasswordResetTokenRepository;
 import com.savorybites.backend.repository.UserRepository;
-import com.savorybites.backend.repository.VerificationRepository.RestaurantRepository;
+import com.savorybites.backend.repository.RestaurantRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
