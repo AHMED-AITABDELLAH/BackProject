@@ -220,10 +220,16 @@ public class UserService {
 
         user.setEmail(userDetailsBody.getEmail());
 
-        if(!encryptionService.verifyPassword(userDetailsBody.getOldPassword(),user.getPassword()))
-            throw new PasswordIncorrectException();
 
-        user.setPassword(encryptionService.encryptPassword(userDetailsBody.getNewPassword()));
+
+        if(!userDetailsBody.getOldPassword().isBlank() && !userDetailsBody.getNewPassword().isBlank()){
+
+            if(!encryptionService.verifyPassword(userDetailsBody.getOldPassword(),user.getPassword()))
+                throw new PasswordIncorrectException();
+
+            user.setPassword(encryptionService.encryptPassword(userDetailsBody.getNewPassword()));
+
+        }
 
         userRepository.save(user);
 
