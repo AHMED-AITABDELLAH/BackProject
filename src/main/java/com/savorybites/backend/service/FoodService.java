@@ -7,18 +7,17 @@ import com.savorybites.backend.repository.FoodRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
-public class FoosService {
+public class FoodService {
 
     public final FoodRepository foodRepository;
 
-    public FoosService(FoodRepository foodRepository) {
+    public FoodService(FoodRepository foodRepository) {
         this.foodRepository = foodRepository;
     }
 
@@ -112,6 +111,17 @@ public class FoosService {
         if(opFood.isPresent()){
             Food food= opFood.get();
             foodRepository.deleteFoodById(foodID);
+        }
+    }
+
+    //Disable food
+    @Transactional
+    public void disableFood(long foodID){
+        Optional<Food> opFood=foodRepository.findFoodById(foodID);
+        if(opFood.isPresent()){
+            Food food= opFood.get();
+            food.setIsAvailable(false);
+            foodRepository.save(food);
         }
     }
 
