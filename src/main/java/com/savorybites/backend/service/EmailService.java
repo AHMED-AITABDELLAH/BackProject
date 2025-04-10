@@ -31,7 +31,7 @@ public class EmailService {
         mailMessage.setTo(verificationToken.getUser().getEmail());
         mailMessage.setSubject("Verify your email");
         mailMessage.setText("Please follow the link bellow to activate your account on the platform. \n"
-                + url + "/auth/verify?token="+verificationToken.getToken());
+                + url + "/verifyAccount?token="+verificationToken.getToken());
         javaMailSender.send(mailMessage);
     }
 
@@ -44,7 +44,7 @@ public class EmailService {
         mailMessage.setSubject("Verify your email");
         mailMessage.setText("Your Account is Approved by Admins ." +
                 "\nPlease follow the link bellow to activate your account on the platform. \n"
-                + url + "/auth/restaurant/verify?token="+verificationToken.getToken());
+                + url + "/verifyAccount?token="+verificationToken.getToken());
         javaMailSender.send(mailMessage);
     }
 

@@ -39,11 +39,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers
                                 (
-                                        "/auth/user/**",
-                                        "/auth/restaurant/**",
-                                        "/auth/verifyEmail",
-                                        "/auth/forgotPassword",
-                                        "/auth/resetPassword",
+                                        "/auth/**",
                                         "/admin/**"
                                 ).permitAll()
                         .requestMatchers("/user/**").hasRole("USER")
