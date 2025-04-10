@@ -1,17 +1,22 @@
 package com.savorybites.backend.service;
 import com.savorybites.backend.api.dto.LoginBody;
+import com.savorybites.backend.api.dto.RestaurantDetailsBody;
+import com.savorybites.backend.api.dto.UserDetailsBody;
 import com.savorybites.backend.exception.*;
+import com.savorybites.backend.model.LocalUser;
 import com.savorybites.backend.model.Role;
 import com.savorybites.backend.repository.VerificationRepository.PasswordResetTokenRepository;
 import com.savorybites.backend.model.verificationModels.PasswordResetToken;
 import com.savorybites.backend.model.verificationModels.VerificationToken;
 import com.savorybites.backend.repository.VerificationRepository.RestaurantRepository;
 import com.savorybites.backend.repository.VerificationRepository.VerificationTokenRepository;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import com.savorybites.backend.api.dto.RestaurantRegistrationBody;
 import com.savorybites.backend.model.Restaurant;
 import java.time.Instant;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 @Service
@@ -150,7 +155,45 @@ public class RestaurantService {
     }
 
 
+    public ResponseEntity<Object> update(Restaurant restaurant, RestaurantDetailsBody restaurantDetailsBody) {
+
+        restaurant.setProfileImg(restaurantDetailsBody.getProfileImg());
+        restaurant.setProfileBanner(restaurantDetailsBody.getProfileBanner());
+        restaurant.setTitle(restaurantDetailsBody.getTitle());
+        restaurant.setPhone(restaurantDetailsBody.getPhone());
+        //TODO Verify the paypal email
+        restaurant.setPaypalEmail(restaurantDetailsBody.getPaypalEmail());
+
+        restaurant.setContactEmail(restaurantDetailsBody.getContactEmail());
+
+        Optional<Restaurant> optionalRestaurant =restaurantRepository.findByEmailIgnoreCase(restaurant.getEmail());
+
+        if(
+                optionalRestaurant.isPresent()
+                &&
+                !Objects.equals(optionalRestaurant.get().getEmail(), restaurantDetailsBody.getEmail())
+        )
+            throw new UserAlreadyExistsException();
+
+        restaurant.setEmail(restaurantDetailsBody.getEmail());
 
 
 
+        if(!restaurantDetailsBody.getOldPassword().isBlank() && !restaurantDetailsBody.getNewPassword().isBlank()){
+
+            if(!encryptionService.verifyPassword(restaurantDetailsBody.getOldPassword(),restaurant.getPassword()))
+                throw new PasswordIncorrectException();
+
+            restaurant.setPassword(encryptionService.encryptPassword(restaurantDetailsBody.getNewPassword()));
+
+        }
+
+        restaurantRepository.save(restaurant);
+
+        return ResponseEntity.ok("Your Account Details Have Been Updated Successfully");
+
+
+
+
+    }
 }

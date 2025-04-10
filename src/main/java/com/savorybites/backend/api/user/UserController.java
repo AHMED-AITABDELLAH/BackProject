@@ -1,10 +1,6 @@
 package com.savorybites.backend.api.user;
 
 import com.savorybites.backend.api.dto.UserDetailsBody;
-import com.savorybites.backend.exception.PasswordIncorrectException;
-import com.savorybites.backend.exception.UserAlreadyExistsException;
-import com.savorybites.backend.repository.UserRepository;
-import com.savorybites.backend.service.EncryptionService;
 import com.savorybites.backend.service.UserService;
 import jakarta.transaction.Transactional;
 import org.springframework.http.ResponseEntity;
@@ -12,8 +8,6 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import com.savorybites.backend.model.LocalUser;
 
-import java.util.Objects;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/user")
