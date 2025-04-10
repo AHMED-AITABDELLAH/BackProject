@@ -1,6 +1,7 @@
 package com.savorybites.backend.service;
 
 import com.savorybites.backend.api.dto.LoginBody;
+import com.savorybites.backend.api.dto.UserDetailsBody;
 import com.savorybites.backend.api.dto.UserRegistrationBody;
 import com.savorybites.backend.exception.*;
 import com.savorybites.backend.model.LocalUser;
@@ -13,11 +14,13 @@ import com.savorybites.backend.repository.UserRepository;
 import com.savorybites.backend.repository.VerificationRepository.RestaurantRepository;
 import com.savorybites.backend.repository.VerificationRepository.VerificationTokenRepository;
 import jakarta.transaction.Transactional;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 @Service
@@ -198,8 +201,34 @@ public class UserService {
                 }
             }throw new PasswordIncorrectException();
         }throw new UserNotFoundException();
-    }
 
+
+    }
+/// ////////////////////////////Updating Data/////////////////////////////////////////////
+
+    public ResponseEntity<Object> update(LocalUser user, UserDetailsBody userDetailsBody){
+
+
+        user.setProfileImg(userDetailsBody.getProfileImg());
+        user.setLastName(userDetailsBody.getLastName());
+        user.setFirstName(userDetailsBody.getFirstName());
+        user.setPhone(userDetailsBody.getPhone());
+        Optional<LocalUser> opUser =userRepository.findByEmailIgnoreCase(user.getEmail());
+
+        if(opUser.isPresent() && !Objects.equals(opUser.get().getEmail(), userDetailsBody.getEmail()))
+            throw new UserAlreadyExistsException();
+
+        user.setEmail(userDetailsBody.getEmail());
+
+        if(!encryptionService.verifyPassword(userDetailsBody.getOldPassword(),user.getPassword()))
+            throw new PasswordIncorrectException();
+
+        user.setPassword(encryptionService.encryptPassword(userDetailsBody.getNewPassword()));
+
+        userRepository.save(user);
+
+        return ResponseEntity.ok("Your Account Details Have Been Updated Successfully");
+    }
 
 
 }

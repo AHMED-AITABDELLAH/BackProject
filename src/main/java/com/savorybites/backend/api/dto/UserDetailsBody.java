@@ -13,5 +13,6 @@ public class UserDetailsBody {
     private String phone;
     private String profileImg;
     private String email;
-    private String password;
+    private String oldPassword;
+    private String newPassword;
 }
