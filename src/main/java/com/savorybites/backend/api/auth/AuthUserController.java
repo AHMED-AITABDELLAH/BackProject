@@ -1,7 +1,7 @@
 package com.savorybites.backend.api.auth;
-import com.savorybites.backend.api.model.LoginBody;
-import com.savorybites.backend.api.model.LoginResponse;
-import com.savorybites.backend.api.model.UserRegistrationBody;
+import com.savorybites.backend.api.dto.LoginBody;
+import com.savorybites.backend.api.dto.LoginResponse;
+import com.savorybites.backend.api.dto.UserRegistrationBody;
 import com.savorybites.backend.model.LocalUser;
 import com.savorybites.backend.service.PasswordResetTokenService;
 import com.savorybites.backend.service.UserService;

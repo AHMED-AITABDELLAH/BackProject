@@ -1,5 +1,5 @@
 package com.savorybites.backend.service;
-import com.savorybites.backend.api.model.LoginBody;
+import com.savorybites.backend.api.dto.LoginBody;
 import com.savorybites.backend.exception.*;
 import com.savorybites.backend.model.Role;
 import com.savorybites.backend.repository.VerificationRepository.PasswordResetTokenRepository;
@@ -7,9 +7,8 @@ import com.savorybites.backend.model.verificationModels.PasswordResetToken;
 import com.savorybites.backend.model.verificationModels.VerificationToken;
 import com.savorybites.backend.repository.VerificationRepository.RestaurantRepository;
 import com.savorybites.backend.repository.VerificationRepository.VerificationTokenRepository;
-import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
-import com.savorybites.backend.api.model.RestaurantRegistrationBody;
+import com.savorybites.backend.api.dto.RestaurantRegistrationBody;
 import com.savorybites.backend.model.Restaurant;
 import java.time.Instant;
 import java.util.List;

@@ -1,4 +1,4 @@
-package com.savorybites.backend.api.model;
+package com.savorybites.backend.api.dto;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;

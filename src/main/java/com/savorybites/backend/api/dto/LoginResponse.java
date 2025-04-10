@@ -1,4 +1,4 @@
-package com.savorybites.backend.api.model;
+package com.savorybites.backend.api.dto;
 
 import lombok.Getter;
 import lombok.Setter;

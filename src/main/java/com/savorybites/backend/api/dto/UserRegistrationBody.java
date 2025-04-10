@@ -1,4 +1,4 @@
-package com.savorybites.backend.api.model;
+package com.savorybites.backend.api.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
