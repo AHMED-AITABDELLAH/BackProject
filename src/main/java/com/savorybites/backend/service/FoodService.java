@@ -5,6 +5,8 @@ import com.savorybites.backend.model.Food;
 import com.savorybites.backend.model.Restaurant;
 import com.savorybites.backend.repository.FoodRepository;
 import jakarta.transaction.Transactional;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.Collections;
@@ -86,8 +88,10 @@ public class FoodService {
 
     //Update a food
     @Transactional
-    public void updateFood(Restaurant restaurant, FoodRegistrationBody foodRegistrationBody,long foodID){
-        Optional<Food> opFood=foodRepository.findFoodById(foodID);
+    public ResponseEntity<Object> updateFood(Restaurant restaurant,
+                                     FoodRegistrationBody foodRegistrationBody,
+                                     long foodID){
+        Optional<Food> opFood=foodRepository.findFoodByIdAndRestaurant(foodID,restaurant);
         if(opFood.isPresent()){
             Food food= opFood.get();
 
@@ -97,33 +101,39 @@ public class FoodService {
             food.setPrice(foodRegistrationBody.getPrice());
             food.setDiscount(foodRegistrationBody.getDiscount());
             food.setIsAvailable(foodRegistrationBody.getIsAvailable());
-            food.setRestaurant(restaurant);
-            foodRepository.save(food);
-        }
 
+            foodRepository.save(food);
+            return ResponseEntity.ok("Your food item is successfully updated");
+        }
+        //TODO :item not found Exception
+        return ResponseEntity.status(HttpStatus.CONFLICT).build();
 
     }
 
     //Delete a food
     @Transactional
-    public void deleteFood(long foodID){
-        Optional<Food> opFood=foodRepository.findFoodById(foodID);
+    public boolean deleteFood(long foodID,Restaurant restaurant){
+        Optional<Food> opFood=foodRepository.findFoodByIdAndRestaurant(foodID,restaurant);
         if(opFood.isPresent()){
-            Food food= opFood.get();
             foodRepository.deleteFoodById(foodID);
+            return true;
         }
+        return false;
     }
 
     //Disable food
     @Transactional
-    public void disableFood(long foodID){
-        Optional<Food> opFood=foodRepository.findFoodById(foodID);
+    public Boolean disableFood(long foodID,Restaurant restaurant){
+        Optional<Food> opFood=foodRepository.findFoodByIdAndRestaurant(foodID,restaurant);
         if(opFood.isPresent()){
             Food food= opFood.get();
             food.setIsAvailable(false);
             foodRepository.save(food);
+            return true;
         }
+        return false;
     }
+
 
 
 

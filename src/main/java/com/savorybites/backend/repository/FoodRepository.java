@@ -22,9 +22,9 @@ public interface FoodRepository extends JpaRepository<Food, Long> {
     //this method for showing a promotion (example : discount > 60%)
     List<Food> findAllByDiscountGreaterThan(int discountIsGreaterThan);
 
-    Optional<Food> findFoodById(long foodID);
+    Optional<Food> findFoodByIdAndRestaurant(Long foodID, Restaurant restaurant);
 
-    Optional<Food> deleteFoodById(long foodID);
+    void deleteFoodById(long foodID);
 
 
     //this method to List food by their categories
