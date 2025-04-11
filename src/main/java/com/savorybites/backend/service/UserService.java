@@ -1,9 +1,9 @@
 package com.savorybites.backend.service;
 
-import com.savorybites.backend.api.dto.LoginBody;
-import com.savorybites.backend.api.dto.UserDetailsBody;
-import com.savorybites.backend.api.dto.UserRegistrationBody;
-import com.savorybites.backend.exception.*;
+import com.savorybites.backend.api.dto.auth.LoginBody;
+import com.savorybites.backend.api.dto.user.UserDetailsBody;
+import com.savorybites.backend.api.dto.auth.UserRegistrationBody;
+import com.savorybites.backend.exception.user.*;
 import com.savorybites.backend.model.LocalUser;
 import com.savorybites.backend.model.Restaurant;
 import com.savorybites.backend.model.Role;

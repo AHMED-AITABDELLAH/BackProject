@@ -1,6 +1,7 @@
 package com.savorybites.backend.exception;
 
 import com.auth0.jwt.exceptions.JWTDecodeException;
+import com.savorybites.backend.exception.user.*;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

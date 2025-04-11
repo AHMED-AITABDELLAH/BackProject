@@ -1,5 +1,5 @@
 package com.savorybites.backend.api.restaurant;
-import com.savorybites.backend.api.dto.RestaurantDetailsBody;
+import com.savorybites.backend.api.dto.restaurant.RestaurantDetailsBody;
 import com.savorybites.backend.model.Restaurant;
 import com.savorybites.backend.service.RestaurantService;
 import jakarta.transaction.Transactional;

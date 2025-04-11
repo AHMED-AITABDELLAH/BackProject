@@ -1,4 +1,4 @@
-package com.savorybites.backend.api.dto;
+package com.savorybites.backend.api.dto.restaurant;
 
 
 import lombok.AllArgsConstructor;

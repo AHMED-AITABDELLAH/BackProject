@@ -1,8 +1,7 @@
 package com.savorybites.backend.api.restaurant;
 
-import com.savorybites.backend.api.dto.FoodDetailsBody;
-import com.savorybites.backend.api.dto.FoodRegistrationBody;
-import com.savorybites.backend.model.Food;
+import com.savorybites.backend.api.dto.food.FoodDetailsBody;
+import com.savorybites.backend.api.dto.food.FoodRegistrationBody;
 import com.savorybites.backend.model.Restaurant;
 import com.savorybites.backend.service.FoodService;
 import org.springframework.http.ResponseEntity;

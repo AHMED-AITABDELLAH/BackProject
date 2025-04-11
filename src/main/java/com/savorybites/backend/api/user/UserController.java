@@ -1,6 +1,6 @@
 package com.savorybites.backend.api.user;
 
-import com.savorybites.backend.api.dto.UserDetailsBody;
+import com.savorybites.backend.api.dto.user.UserDetailsBody;
 import com.savorybites.backend.service.UserService;
 import jakarta.transaction.Transactional;
 import org.springframework.http.ResponseEntity;

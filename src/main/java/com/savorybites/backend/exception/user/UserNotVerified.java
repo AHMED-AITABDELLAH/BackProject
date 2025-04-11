@@ -1,4 +1,4 @@
-package com.savorybites.backend.exception;
+package com.savorybites.backend.exception.user;
 
 public class UserNotVerified extends RuntimeException {
     public UserNotVerified() {

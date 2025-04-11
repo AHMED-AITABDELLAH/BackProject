@@ -1,6 +1,6 @@
 package com.savorybites.backend.service;
 
-import com.savorybites.backend.exception.EmailFailureException;
+import com.savorybites.backend.exception.user.EmailFailureException;
 import com.savorybites.backend.model.Restaurant;
 import com.savorybites.backend.model.verificationModels.PasswordResetToken;
 import com.savorybites.backend.model.verificationModels.VerificationToken;

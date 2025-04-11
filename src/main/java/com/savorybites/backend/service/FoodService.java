@@ -1,15 +1,14 @@
 package com.savorybites.backend.service;
 
-import com.savorybites.backend.api.dto.FoodDetailsBody;
-import com.savorybites.backend.api.dto.FoodRegistrationBody;
-import com.savorybites.backend.exception.UserNotFoundException;
+import com.savorybites.backend.api.dto.food.FoodDetailsBody;
+import com.savorybites.backend.api.dto.food.FoodRegistrationBody;
+import com.savorybites.backend.exception.user.UserNotFoundException;
 import com.savorybites.backend.model.Category;
 import com.savorybites.backend.model.Food;
 import com.savorybites.backend.model.Restaurant;
 import com.savorybites.backend.repository.CategoryRepository;
 import com.savorybites.backend.repository.FoodRepository;
 import com.savorybites.backend.repository.RestaurantRepository;
-import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

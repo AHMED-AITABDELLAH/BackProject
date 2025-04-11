@@ -1,7 +1,7 @@
 package com.savorybites.backend.api.auth;
-import com.savorybites.backend.api.dto.LoginBody;
-import com.savorybites.backend.api.dto.LoginResponse;
-import com.savorybites.backend.api.dto.RestaurantRegistrationBody;
+import com.savorybites.backend.api.dto.auth.LoginBody;
+import com.savorybites.backend.api.dto.auth.LoginResponse;
+import com.savorybites.backend.api.dto.auth.RestaurantRegistrationBody;
 import com.savorybites.backend.model.Restaurant;
 import com.savorybites.backend.service.RestaurantService;
 import jakarta.validation.Valid;

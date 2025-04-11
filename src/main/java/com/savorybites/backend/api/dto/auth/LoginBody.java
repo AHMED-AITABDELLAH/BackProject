@@ -1,4 +1,4 @@
-package com.savorybites.backend.api.dto;
+package com.savorybites.backend.api.dto.auth;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
