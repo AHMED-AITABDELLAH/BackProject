@@ -1,6 +1,6 @@
 package com.savorybites.backend.service;
 
-import com.savorybites.backend.api.model.FoodRegistrationBody;
+import com.savorybites.backend.api.dto.FoodRegistrationBody;
 import com.savorybites.backend.model.Food;
 import com.savorybites.backend.model.Restaurant;
 import com.savorybites.backend.repository.FoodRepository;
