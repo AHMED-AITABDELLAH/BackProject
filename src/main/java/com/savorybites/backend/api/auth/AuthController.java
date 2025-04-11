@@ -2,7 +2,7 @@ package com.savorybites.backend.api.auth;
 
 import com.savorybites.backend.exception.EmailAlreadySentException;
 import com.savorybites.backend.repository.UserRepository;
-import com.savorybites.backend.repository.VerificationRepository.RestaurantRepository;
+import com.savorybites.backend.repository.RestaurantRepository;
 import com.savorybites.backend.service.BlacklistedTokenService;
 import com.savorybites.backend.service.PasswordResetTokenService;
 import com.savorybites.backend.service.RestaurantService;

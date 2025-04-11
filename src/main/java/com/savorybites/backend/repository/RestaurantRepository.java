@@ -1,4 +1,4 @@
-package com.savorybites.backend.repository.VerificationRepository;
+package com.savorybites.backend.repository;
 
 import com.savorybites.backend.model.Restaurant;
 import org.springframework.data.jpa.repository.JpaRepository;
