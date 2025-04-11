@@ -1,9 +1,11 @@
 package com.savorybites.backend.repository;
 
+import com.savorybites.backend.model.Category;
 import com.savorybites.backend.model.Food;
 import com.savorybites.backend.model.Restaurant;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -24,11 +26,15 @@ public interface FoodRepository extends JpaRepository<Food, Long> {
 
     Optional<Food> findFoodByIdAndRestaurant(Long foodID, Restaurant restaurant);
 
-    void deleteFoodById(long foodID);
 
 
-    //this method to List food by their categories
-    //TODO: ADD CATEGORIES
 
 
+    //this method to List food by multiple categories
+    List<Food> findDistinctByCategoriesInAndIsAvailableIsTrue(Collection<Category> categories);
+
+    //this method List food by a category
+    List<Food> findByCategories_Id(Long id);
+
+    void deleteByIdAndRestaurant(Long id, Restaurant restaurant);
 }

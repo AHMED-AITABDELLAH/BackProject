@@ -66,6 +66,10 @@ public class Restaurant {
     @OrderBy("id desc")
     private List<VerificationToken> verificationTokens = new ArrayList<>();
 
+    @JsonIgnore
+    @OneToMany(mappedBy = "restaurant", orphanRemoval = true)
+    private List<Food> foods = new ArrayList<>();
+
     @PrePersist
     protected void onCreate() {
         if (isApproved == null) {

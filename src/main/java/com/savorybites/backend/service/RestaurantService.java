@@ -196,4 +196,12 @@ public class RestaurantService {
 
 
     }
+
+    public Restaurant getManagedRestaurant(Restaurant restaurant){
+        Optional<Restaurant> optionalRestaurant=restaurantRepository.findRestaurantById(restaurant.getId());
+        if(optionalRestaurant.isPresent())
+            return optionalRestaurant.get();
+        //TODO idk
+        throw new UserNotFoundException();
+    }
 }
