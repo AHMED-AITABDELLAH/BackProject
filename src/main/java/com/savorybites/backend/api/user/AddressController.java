@@ -10,14 +10,14 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-@RestController
+@RestController("userAddressController")
 @RequestMapping("/user/address")
-public class addressController {
+public class AddressController {
 
 
     private final AddressService addressService;
 
-    public addressController(AddressService addressService) {
+    public AddressController(AddressService addressService) {
         this.addressService = addressService;
     }
 

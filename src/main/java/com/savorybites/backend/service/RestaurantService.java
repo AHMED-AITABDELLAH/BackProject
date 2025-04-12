@@ -27,20 +27,22 @@ public class RestaurantService {
     private final JWTService jwtService;
     private final VerificationTokenRepository verificationTokenRepository;
     private final PasswordResetTokenRepository passwordResetTokenRepository;
+    private final AddressService addressService;
 
     public RestaurantService(
             RestaurantRepository restaurantRepository,
             EncryptionService encryptionService,
             EmailService emailService,
             JWTService jwtService,
-            VerificationTokenRepository verificationTokenRepository, PasswordResetTokenRepository passwordResetTokenRepository
-    ) {
+            VerificationTokenRepository verificationTokenRepository, PasswordResetTokenRepository passwordResetTokenRepository,
+            AddressService addressService) {
         this.restaurantRepository = restaurantRepository;
         this.encryptionService = encryptionService;
         this.emailService = emailService;
         this.jwtService = jwtService;
         this.verificationTokenRepository = verificationTokenRepository;
         this.passwordResetTokenRepository = passwordResetTokenRepository;
+        this.addressService = addressService;
     }
 
 
@@ -59,9 +61,13 @@ public class RestaurantService {
         restaurant.setContactEmail(body.getContactEmail());
         restaurant.setPaypalEmail(body.getPaypalEmail());
         restaurant.setPassword(encryptionService.encryptPassword(body.getPassword()));
-        restaurant.setAddress(body.getAddress());
-        restaurant.setIsApproved(false);
-        restaurant.setIsVerified(false);
+
+        boolean success = addressService.addAddress(restaurant,body.getAddressRegistrationBody());
+        if(success){
+            restaurant.setIsApproved(false);
+            restaurant.setIsVerified(false);
+        }
+
 
         restaurantRepository.save(restaurant);
         emailService.sendAccountIsWaitingApproval(restaurant);

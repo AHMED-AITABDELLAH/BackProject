@@ -8,7 +8,6 @@ import com.savorybites.backend.model.Food;
 import com.savorybites.backend.model.Restaurant;
 import com.savorybites.backend.repository.CategoryRepository;
 import com.savorybites.backend.repository.FoodRepository;
-import com.savorybites.backend.repository.RestaurantRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -26,14 +25,12 @@ public class FoodService {
     public final FoodRepository foodRepository;
     private final CategoryRepository categoryRepository;
     private final CategoryService categoryService;
-    private final RestaurantRepository restaurantRepository;
     private final RestaurantService restaurantService;
 
-    public FoodService(FoodRepository foodRepository, CategoryRepository categoryRepository, CategoryService categoryService, RestaurantRepository restaurantRepository, RestaurantService restaurantService) {
+    public FoodService(FoodRepository foodRepository, CategoryRepository categoryRepository, CategoryService categoryService, RestaurantService restaurantService) {
         this.foodRepository = foodRepository;
         this.categoryRepository = categoryRepository;
         this.categoryService = categoryService;
-        this.restaurantRepository = restaurantRepository;
         this.restaurantService = restaurantService;
     }
 

@@ -23,10 +23,11 @@ public class Address {
     @JoinColumn(name = "user_id")
     private LocalUser user;
 
-    @OneToOne( orphanRemoval = true)
     @JsonIgnore
-    @JoinColumn(name = "restaurant_id")
+    @OneToOne( orphanRemoval = true)
+    @JoinColumn(name = "restaurant_id", unique = true)
     private Restaurant restaurant;
+
 
     @Column(name = "street", nullable = false)
     private String street;
@@ -50,7 +51,7 @@ public class Address {
     private Double longitude;
 
     @Column(name = "is_Default")
-    private boolean isDefault;
+    private Boolean isDefault;
 
     @Column(name = "is_Coordination_Activated")
     private boolean isCoordinationActivated;

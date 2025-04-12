@@ -58,8 +58,9 @@ public class Restaurant {
     @Column(name = "is_verified")
     private Boolean isVerified = false;
 
-    @Column(name="address" ,nullable = false)
-    private String address;
+    @OneToOne(mappedBy = "restaurant", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Address address;
+
 
     @JsonIgnore
     @OneToMany(mappedBy = "restaurant",cascade = CascadeType.ALL, orphanRemoval = true)
