@@ -2,12 +2,14 @@ package com.savorybites.backend.service;
 import com.savorybites.backend.api.dto.auth.LoginBody;
 import com.savorybites.backend.api.dto.restaurant.RestaurantDetailsBody;
 import com.savorybites.backend.exception.user.*;
+import com.savorybites.backend.model.Address;
 import com.savorybites.backend.model.Role;
 import com.savorybites.backend.repository.VerificationRepository.PasswordResetTokenRepository;
 import com.savorybites.backend.model.verificationModels.PasswordResetToken;
 import com.savorybites.backend.model.verificationModels.VerificationToken;
 import com.savorybites.backend.repository.RestaurantRepository;
 import com.savorybites.backend.repository.VerificationRepository.VerificationTokenRepository;
+import jakarta.transaction.Transactional;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import com.savorybites.backend.api.dto.auth.RestaurantRegistrationBody;
@@ -46,13 +48,13 @@ public class RestaurantService {
     }
 
 
-
     public void registerRestaurant(RestaurantRegistrationBody body)
             throws UserAlreadyExistsException {
 
         if (restaurantRepository.findByEmailIgnoreCase(body.getEmail()).isPresent())
             throw new UserAlreadyExistsException();
 
+        // Step 1: Create the restaurant object
         Restaurant restaurant = new Restaurant();
         restaurant.setRole(Role.ROLE_RESTAURANT);
         restaurant.setTitle(body.getRestaurantName());
@@ -61,15 +63,20 @@ public class RestaurantService {
         restaurant.setContactEmail(body.getContactEmail());
         restaurant.setPaypalEmail(body.getPaypalEmail());
         restaurant.setPassword(encryptionService.encryptPassword(body.getPassword()));
+        restaurant.setIsApproved(false);
+        restaurant.setIsVerified(false);
 
-        boolean success = addressService.addAddress(restaurant,body.getAddressRegistrationBody());
-        if(success){
-            restaurant.setIsApproved(false);
-            restaurant.setIsVerified(false);
-        }
+        // Step 2: Create the address and link both ways
+        Address address = new Address();
+        addressService.addAddress(restaurant,body.getAddressRegistrationBody(),address);
+        address.setRestaurant(restaurant);         // unidirectional link
+        restaurant.setAddress(address);            //sets FK reference
 
-
+        // Step 3: Save the restaurant (cascade saves address)
         restaurantRepository.save(restaurant);
+
+
+        // Step 4: Send email
         emailService.sendAccountIsWaitingApproval(restaurant);
     }
 

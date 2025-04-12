@@ -3,10 +3,7 @@ package com.savorybites.backend.api.auth;
 import com.savorybites.backend.exception.user.EmailAlreadySentException;
 import com.savorybites.backend.repository.UserRepository;
 import com.savorybites.backend.repository.RestaurantRepository;
-import com.savorybites.backend.service.BlacklistedTokenService;
-import com.savorybites.backend.service.PasswordResetTokenService;
-import com.savorybites.backend.service.RestaurantService;
-import com.savorybites.backend.service.UserService;
+import com.savorybites.backend.service.*;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.http.HttpStatus;
@@ -15,6 +12,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler;
 import org.springframework.web.bind.annotation.*;
 
+
 @RestController
 @RequestMapping("/auth")
 public class AuthController
@@ -22,16 +20,14 @@ public class AuthController
 
     private final PasswordResetTokenService passwordResetTokenService;
     private final UserService userService;
-    private final BlacklistedTokenService blacklistedTokenService;
     private final UserRepository userRepository;
     private final RestaurantRepository restaurantRepository;
     private final RestaurantService restaurantService;
 
 
-    public AuthController(PasswordResetTokenService passwordResetTokenService, UserService userService, BlacklistedTokenService blacklistedTokenService, UserRepository userRepository, RestaurantRepository restaurantRepository, RestaurantService restaurantService) {
+    public AuthController(PasswordResetTokenService passwordResetTokenService, UserService userService, UserRepository userRepository, RestaurantRepository restaurantRepository, RestaurantService restaurantService) {
         this.passwordResetTokenService = passwordResetTokenService;
         this.userService = userService;
-        this.blacklistedTokenService = blacklistedTokenService;
         this.userRepository = userRepository;
         this.restaurantRepository = restaurantRepository;
         this.restaurantService = restaurantService;

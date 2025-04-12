@@ -38,7 +38,7 @@ public class AddressController {
     public ResponseEntity<Object> addAddress(@AuthenticationPrincipal LocalUser user,
                                              @RequestBody AddressRegistrationBody addressRegistrationBody)
     {
-        boolean success=addressService.addAddress(user,addressRegistrationBody);
+        boolean success=addressService.addAddress(user,addressRegistrationBody,new Address());
         return success
                 ?ResponseEntity.ok("Address added Successfully!")
                 :ResponseEntity.internalServerError().body("Something went wrong.");

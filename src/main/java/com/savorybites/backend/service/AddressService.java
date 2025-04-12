@@ -5,6 +5,7 @@ import com.savorybites.backend.model.Address;
 import com.savorybites.backend.model.LocalUser;
 import com.savorybites.backend.model.Restaurant;
 import com.savorybites.backend.repository.AddressRepository;
+import com.savorybites.backend.repository.RestaurantRepository;
 import com.savorybites.backend.repository.addressDetailRepository.CommuneRepository;
 import com.savorybites.backend.repository.addressDetailRepository.ProvinceRepository;
 import com.savorybites.backend.repository.addressDetailRepository.RegionRepository;
@@ -23,21 +24,20 @@ public class AddressService {
     private final RegionRepository regionRepository;
     private final CommuneRepository communeRepository;
     private final UserService userService;
-    private final RestaurantService restaurantService;
+    private final RestaurantRepository restaurantRepository;
 
     public AddressService(AddressRepository addressRepository,
                           ProvinceRepository provinceRepository,
                           RegionRepository regionRepository,
                           CommuneRepository communeRepository,
-                          UserService userService,
-                          RestaurantService restaurantService)
+                          UserService userService, RestaurantRepository restaurantRepository)
     {
         this.addressRepository = addressRepository;
         this.provinceRepository = provinceRepository;
         this.regionRepository = regionRepository;
         this.communeRepository = communeRepository;
         this.userService = userService;
-        this.restaurantService = restaurantService;
+        this.restaurantRepository = restaurantRepository;
     }
 
 
@@ -74,7 +74,8 @@ public class AddressService {
         // Set the Street
         address.setStreet(addressRegistrationBody.getStreet());
 
-        if(managedAccount instanceof LocalUser){
+        if(managedAccount instanceof LocalUser)
+        {
             // If the new address is set to default, update the old default address (if it exists)
             if (addressRegistrationBody.isDefault()) {
                 Optional<Address> opDefaultAddress = addressRepository.findByUserAndIsDefaultTrue((LocalUser)managedAccount);
@@ -89,50 +90,48 @@ public class AddressService {
                 // Set the current address default
                 address.setIsDefault(addressRegistrationBody.isDefault());
             }
-        } else if (managedAccount instanceof Restaurant) {
-            // if an address exists
-                Optional<Address> opAddress = addressRepository.findByRestaurant((Restaurant)managedAccount);
-                if(opAddress.isEmpty()){
-                    address.setIsDefault(true);
-                }else throw new EntityExistsException("this restaurant already has an address");
+        }
+        else if (managedAccount instanceof Restaurant) {
+            address.setIsDefault(true);
         }
 
         if(addressRegistrationBody.isCoordinationActivated()){
             address.setLatitude(addressRegistrationBody.getLatitude());
             address.setLongitude(addressRegistrationBody.getLongitude());
         }else{
+
             address.setLatitude(null);
             address.setLongitude(null);
         }
+        address.setCoordinationActivated(addressRegistrationBody.isCoordinationActivated());
 
     }
 
 
     @Transactional
     public boolean addAddress(Object managedAccount,
-                              AddressRegistrationBody addressRegistrationBody)
+                              AddressRegistrationBody addressRegistrationBody,
+                              Address addr)
     {
-        Address address = new Address();
         if(managedAccount instanceof LocalUser){
             // Retrieve managed user from the user service
             LocalUser managedUser = userService.getManagedUser((LocalUser) managedAccount);
             //assigning the values
-            assignValuesToAddress(address,addressRegistrationBody,managedUser);
+            assignValuesToAddress(addr,addressRegistrationBody,managedUser);
             // Link the address to the user
-            address.setUser(managedUser);
+            addr.setUser(managedUser);
+            // Save the new address
+            addressRepository.save(addr);
+            return true;
 
-        } else if (managedAccount instanceof Restaurant) {
-            // Retrieve managed user from the user service
-            Restaurant managedRestaurant = restaurantService.getManagedRestaurant((Restaurant) managedAccount);
+        } else if (managedAccount instanceof Restaurant managedRestaurant) {
             //assigning the values
-            assignValuesToAddress(address,addressRegistrationBody,managedRestaurant);
-            // Link the address to the user
-            address.setRestaurant(managedRestaurant);
-
+            assignValuesToAddress(addr,addressRegistrationBody,managedRestaurant);
+            return true;
         }
-        // Save the new address
-        addressRepository.save(address);
-        return true;
+        return false;
+
+
 
     }
 
@@ -145,7 +144,8 @@ public class AddressService {
     {
         Optional<Address> optionalAddress;
         Address address = new Address();
-        if(managedAccount instanceof LocalUser){
+        if(managedAccount instanceof LocalUser)
+        {
             // Retrieve managed user from the user service
             LocalUser managedUser = userService.getManagedUser((LocalUser) managedAccount);
             optionalAddress = addressRepository.findByUserAndId(managedUser,addressID);
@@ -155,16 +155,16 @@ public class AddressService {
 
             //assigning the values
             assignValuesToAddress(address,addressRegistrationBody,managedUser);
-        } else if (managedAccount instanceof Restaurant) {
-            // Retrieve managed user from the user service
-            Restaurant managedUser = restaurantService.getManagedRestaurant((Restaurant) managedAccount);
-            optionalAddress = addressRepository.findByRestaurantAndId((Restaurant) managedAccount,addressID);
+        }
+        else if (managedAccount instanceof Restaurant managedRestaurant) {
+
+            optionalAddress = addressRepository.findById(addressID);
             if(optionalAddress.isEmpty())
                 throw new EntityNotFoundException();
             address=optionalAddress.get();
-
+            System.out.println("we got the address");
             //assigning the values
-            assignValuesToAddress(address,addressRegistrationBody,managedUser);
+            assignValuesToAddress(address,addressRegistrationBody, managedRestaurant);
         }
 
 
@@ -184,10 +184,6 @@ public class AddressService {
             // Retrieve managed user from the user service
             LocalUser managedUser = userService.getManagedUser((LocalUser) managedAccount);
             optionalAddress = addressRepository.findByUserAndId(managedUser,addressID);
-        } else if (managedAccount instanceof Restaurant) {
-            // Retrieve managed Restaurant from the Restaurant service
-            Restaurant managedRestaurant = restaurantService.getManagedRestaurant((Restaurant) managedAccount);
-            optionalAddress = addressRepository.findByRestaurantAndId(managedRestaurant,addressID);
         }
         if(optionalAddress.isEmpty())
             throw new EntityNotFoundException();
@@ -201,13 +197,6 @@ public class AddressService {
     {
         Optional<Address> optionalAddress = addressRepository
                     .findByUserAndId(user,addressID);
-        return optionalAddress.orElse(null);
-    }
-
-    public Address getRestaurantAddress(Restaurant restaurant)
-    {
-        Optional<Address> optionalAddress = addressRepository
-                .findByRestaurant(restaurant);
         return optionalAddress.orElse(null);
     }
 

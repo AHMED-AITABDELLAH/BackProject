@@ -3,6 +3,7 @@ package com.savorybites.backend.model;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.savorybites.backend.model.verificationModels.VerificationToken;
 import jakarta.persistence.*;
+import jakarta.validation.metadata.CascadableDescriptor;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -58,7 +59,8 @@ public class Restaurant {
     @Column(name = "is_verified")
     private Boolean isVerified = false;
 
-    @OneToOne(mappedBy = "restaurant", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "address", referencedColumnName = "address_id", nullable = false)
     private Address address;
 
 

@@ -21,11 +21,5 @@ public interface AddressRepository extends JpaRepository<Address, Long> {
 
     Optional<Address> findByUserAndIsDefaultTrue(LocalUser user);
 
-    Optional<Address> findByRestaurantAndIsDefaultIsTrue(Restaurant restaurant);
-
-    Optional<Address> findByRegionAndId(Region region, Long id);
-
-    Optional<Address> findByRestaurantAndId(Restaurant restaurant, Long id);
-
     Optional<Address> findByRestaurant(Restaurant managedAccount);
 }

@@ -14,6 +14,7 @@ import lombok.Setter;
 @Table(name = "address")
 public class Address {
     @Id
+    @JsonIgnore
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "address_id", nullable = false)
     private Long id;
@@ -24,9 +25,9 @@ public class Address {
     private LocalUser user;
 
     @JsonIgnore
-    @OneToOne( orphanRemoval = true)
-    @JoinColumn(name = "restaurant_id", unique = true)
+    @OneToOne(mappedBy = "address",orphanRemoval = true)
     private Restaurant restaurant;
+
 
 
     @Column(name = "street", nullable = false)

@@ -32,7 +32,6 @@ public class FoodController {
                                                  @PathVariable long foodID,
                                                  @RequestBody FoodRegistrationBody foodRegistrationBody)
     {
-        System.out.println("We in controller");
         return foodService.updateFood(restaurant,foodRegistrationBody, foodID);
     }
 

@@ -21,7 +21,7 @@ public class AddressController {
     @GetMapping("/")
     public Address getAddress(@AuthenticationPrincipal Restaurant restaurant)
     {
-        return addressService.getRestaurantAddress(restaurant);
+        return restaurant.getAddress();
     }
 
 
@@ -29,7 +29,7 @@ public class AddressController {
     public ResponseEntity<Object> addAddress(@AuthenticationPrincipal Restaurant restaurant,
                                              @RequestBody AddressRegistrationBody addressRegistrationBody)
     {
-        boolean success=addressService.addAddress(restaurant,addressRegistrationBody);
+        boolean success=addressService.addAddress(restaurant,addressRegistrationBody,new Address());
         return success
                 ?ResponseEntity.ok("Address added Successfully!")
                 :ResponseEntity.internalServerError().body("Something went wrong.");
@@ -40,20 +40,10 @@ public class AddressController {
     public ResponseEntity<Object> updateAddress(@AuthenticationPrincipal Restaurant restaurant,
                                                 @RequestBody AddressRegistrationBody addressRegistrationBody)
     {
-        long id = addressService.getRestaurantAddress(restaurant).getId();
+        long id = restaurant.getAddress().getId();
         boolean success=addressService.updateAddress(restaurant,addressRegistrationBody,id);
         return success
                 ?ResponseEntity.ok("Address updated Successfully!")
-                :ResponseEntity.internalServerError().body("Something went wrong.");
-    }
-
-    @PostMapping("/delete")
-    public ResponseEntity<Object> deleteAddress(@AuthenticationPrincipal Restaurant restaurant)
-    {
-        long id = addressService.getRestaurantAddress(restaurant).getId();
-        boolean success=addressService.deleteAddress(restaurant,id);
-        return success
-                ?ResponseEntity.ok("Address deleted Successfully!")
                 :ResponseEntity.internalServerError().body("Something went wrong.");
     }
 
