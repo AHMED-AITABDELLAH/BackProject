@@ -1,5 +1,9 @@
 package com.savorybites.backend.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.savorybites.backend.model.addressDetailModels.Commune;
+import com.savorybites.backend.model.addressDetailModels.Province;
+import com.savorybites.backend.model.addressDetailModels.Region;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -15,27 +19,41 @@ public class Address {
     private Long id;
 
     @ManyToOne
+    @JsonIgnore
+    @JoinColumn(name = "user_id")
     private LocalUser user;
 
-    @OneToOne
+    @OneToOne( orphanRemoval = true)
+    @JsonIgnore
+    @JoinColumn(name = "restaurant_id")
     private Restaurant restaurant;
-
-    @Column(name = "id", nullable = false)
-    private String province;
 
     @Column(name = "street", nullable = false)
     private String street;
 
+    @OneToOne
+    @JoinColumn(name = "region_id")
+    private Region region;
 
-    @Column(name = "commune", nullable = false)
-    private String commune;
+    @OneToOne
+    @JoinColumn(name = "province_id")
+    private Province province;
 
-    @Column(name = "region", nullable = false)
-    private String region;
+    @OneToOne
+    @JoinColumn(name = "commune_id")
+    private Commune commune;
 
+    @Column(name="latitude")
+    private Double latitude;
 
+    @Column(name="longitude")
+    private Double longitude;
 
     @Column(name = "is_Default")
     private boolean isDefault;
+
+    @Column(name = "is_Coordination_Activated")
+    private boolean isCoordinationActivated;
+
 
 }

@@ -236,5 +236,14 @@ public class UserService {
         return ResponseEntity.ok("Your Account Details Have Been Updated Successfully");
     }
 
+    /// ////////////////////////////////////////////////////////////////
+    public LocalUser getManagedUser(LocalUser user){
+        Optional<LocalUser> optionalUser=userRepository.findLocalUserById(user.getId());
+        if(optionalUser.isPresent())
+            return optionalUser.get();
+        //TODO idk
+        throw new UserNotFoundException();
+    }
+
 
 }

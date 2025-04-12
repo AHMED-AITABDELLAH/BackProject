@@ -1,5 +1,6 @@
 package com.savorybites.backend.model.addressDetailModels;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -17,6 +18,7 @@ public class Province {
     @Column(name = "province_name", nullable = false)
     private String provinceName;
 
+    @JsonIgnore
     @ManyToOne
     private Region region;
 

@@ -31,11 +31,6 @@ public class UserController {
         return userService.update(user,userDetailsBody);
     }
 
-    @GetMapping("/address")
-    public void get(){
-
-    }
-
     @GetMapping("/paymentMethods")
     public void get2(){
 

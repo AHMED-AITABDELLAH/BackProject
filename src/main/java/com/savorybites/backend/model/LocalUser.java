@@ -37,8 +37,10 @@ public class LocalUser {
     @Column(name="phone")
     private String phone;
 
-    @Column(name="address")
-    private String address;
+    @JsonIgnore
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Address> addresses = new ArrayList<>();
+
 
     @Column(name="profile_img")
     private String profileImg;

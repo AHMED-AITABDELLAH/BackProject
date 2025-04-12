@@ -27,6 +27,13 @@ public class DataLoader implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
+
+        // Run only if there are no regions (i.e., no seed data yet)
+        if (regionRepository.count() > 0) {
+            System.out.println("Data already seeded, skipping...");
+            return;
+        }
+
         // Insert regions
         Region region1 = saveRegion("Tanger-Tetouan-Al Hoceima");
         Region region2 = saveRegion("Oriental");
