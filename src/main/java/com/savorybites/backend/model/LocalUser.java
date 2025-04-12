@@ -58,12 +58,17 @@ public class LocalUser {
     @Column(nullable = false)
     private Boolean isVerified = false;
 
+    @JsonIgnore
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Cart cart;
+
 
 
     @JsonIgnore
     @OrderBy("id desc")
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<VerificationToken> verificationTokens = new ArrayList<>();
+
 
 
 

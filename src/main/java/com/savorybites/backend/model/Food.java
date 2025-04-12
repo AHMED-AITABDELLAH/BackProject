@@ -36,10 +36,11 @@ public class Food {
     @Column(name="discount")
     private int discount;
 
-    //TODO: ADD CATEGORIES
+    @Column(name="discounted_price")
+    private double discountedPrice;
 
 
-    @Column(name="isAvailable")
+    @Column(name="is_available")
     private Boolean isAvailable;
 
     @ManyToMany
@@ -48,10 +49,16 @@ public class Food {
             inverseJoinColumns = @JoinColumn(name = "category_id"))
     private List<Category> categories = new ArrayList<>();
 
+    @PreUpdate
+    protected void setDiscountedPrice(){
+        discountedPrice =price-(price*discount)/100;
+    }
+
     @PrePersist
     protected void onCreate(){
         if(isAvailable==null)
             isAvailable=true;
+        discountedPrice =price-(price*discount)/100;
     }
 
 
