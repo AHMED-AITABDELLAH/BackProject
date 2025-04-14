@@ -18,6 +18,7 @@ public class RestaurantDetailsBody {
     private AddressRegistrationBody addressRegistrationBody;
     private String OldPassword;
     private String newPassword;
+    private double shippingFees;
     private String contactEmail;
     private String paypalEmail;
     private String profileImg;

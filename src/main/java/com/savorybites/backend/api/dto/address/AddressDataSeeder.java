@@ -10,7 +10,7 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
 @Component
-public class DataLoader implements CommandLineRunner {
+public class AddressDataSeeder implements CommandLineRunner {
 
     private final RegionRepository regionRepository;
 
@@ -19,7 +19,7 @@ public class DataLoader implements CommandLineRunner {
     private final CommuneRepository communeRepository;
 
 
-    public DataLoader(RegionRepository regionRepository, ProvinceRepository provinceRepository, CommuneRepository communeRepository) {
+    public AddressDataSeeder(RegionRepository regionRepository, ProvinceRepository provinceRepository, CommuneRepository communeRepository) {
         this.regionRepository = regionRepository;
         this.provinceRepository = provinceRepository;
         this.communeRepository = communeRepository;

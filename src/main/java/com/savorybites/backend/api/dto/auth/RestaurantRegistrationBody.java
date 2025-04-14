@@ -14,6 +14,7 @@ public class RestaurantRegistrationBody {
     private String email;
     private String phone;
     private AddressRegistrationBody addressRegistrationBody;
+    private double shippingFees;
     private String paypalEmail;
     private String contactEmail;
     private String password;

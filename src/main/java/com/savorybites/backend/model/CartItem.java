@@ -1,5 +1,6 @@
 package com.savorybites.backend.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -12,11 +13,13 @@ public class CartItem {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", nullable = false)
-    private Long item_id;
+    private Long itemID;
 
-    @ManyToOne(cascade = CascadeType.ALL, optional = false)
+    @JsonIgnore
+    @ManyToOne(optional = false)
     @JoinColumn(name = "cart_id", nullable = false)
     private Cart cart;
+
 
     @ManyToOne(cascade = CascadeType.ALL, optional = false)
     @JoinColumn(name = "food_id", nullable = false)

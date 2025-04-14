@@ -33,12 +33,16 @@ public class UserService {
     private final VerificationTokenRepository verificationTokenRepository;
     private final PasswordResetTokenRepository passwordResetTokenRepository;
     private final RestaurantRepository restaurantRepository;
+    private final CartService cartService;
 
     public UserService(UserRepository userRepository,
                        EncryptionService encryptionService,
                        JWTService jwtService,
                        EmailService emailService,
-                       VerificationTokenRepository verificationTokenRepository, PasswordResetTokenRepository passwordResetTokenRepository, RestaurantRepository restaurantRepository) {
+                       VerificationTokenRepository verificationTokenRepository,
+                       PasswordResetTokenRepository passwordResetTokenRepository,
+                       RestaurantRepository restaurantRepository,
+                       CartService cartService) {
         this.userRepository = userRepository;
         this.encryptionService = encryptionService;
         this.jwtService = jwtService;
@@ -46,6 +50,7 @@ public class UserService {
         this.verificationTokenRepository = verificationTokenRepository;
         this.passwordResetTokenRepository = passwordResetTokenRepository;
         this.restaurantRepository = restaurantRepository;
+        this.cartService = cartService;
     }
 
     /// ////////////////////////////////////////////SignUP-Registration//////////////////////////////////////
@@ -75,6 +80,8 @@ public class UserService {
 
 
         userRepository.save(newUser);
+        //Create Cart associated with the user
+        cartService.createCart(newUser);
         verificationTokenRepository.save(verificationToken);
     }
     /// //////////Generating  verification JWT upon Registering/Login////////////////////////

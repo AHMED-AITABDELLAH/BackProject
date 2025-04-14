@@ -3,13 +3,10 @@ package com.savorybites.backend.model;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.savorybites.backend.model.verificationModels.VerificationToken;
 import jakarta.persistence.*;
-import jakarta.validation.metadata.CascadableDescriptor;
 import lombok.Getter;
 import lombok.Setter;
-
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 
 @Getter
 @Setter
@@ -59,8 +56,8 @@ public class Restaurant {
     @Column(name = "is_verified")
     private Boolean isVerified = false;
 
-    @OneToOne(cascade = CascadeType.ALL)
-    @JoinColumn(name = "address", referencedColumnName = "address_id", nullable = false)
+    @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinColumn(name = "address_id", referencedColumnName = "address_id", nullable = false)
     private Address address;
 
 
@@ -69,8 +66,11 @@ public class Restaurant {
     @OrderBy("id desc")
     private List<VerificationToken> verificationTokens = new ArrayList<>();
 
+    @Column(name = "shipping_fees")
+    private double shippingFees;
+
     @JsonIgnore
-    @OneToMany(mappedBy = "restaurant", orphanRemoval = true)
+    @OneToMany(mappedBy = "restaurant", orphanRemoval = true,cascade = CascadeType.ALL)
     private List<Food> foods = new ArrayList<>();
 
     @PrePersist

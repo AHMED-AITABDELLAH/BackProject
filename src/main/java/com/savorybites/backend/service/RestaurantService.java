@@ -63,6 +63,7 @@ public class RestaurantService {
         restaurant.setContactEmail(body.getContactEmail());
         restaurant.setPaypalEmail(body.getPaypalEmail());
         restaurant.setPassword(encryptionService.encryptPassword(body.getPassword()));
+        restaurant.setShippingFees(body.getShippingFees());
         restaurant.setIsApproved(false);
         restaurant.setIsVerified(false);
 
@@ -172,6 +173,7 @@ public class RestaurantService {
         restaurant.setProfileBanner(restaurantDetailsBody.getProfileBanner());
         restaurant.setTitle(restaurantDetailsBody.getTitle());
         restaurant.setPhone(restaurantDetailsBody.getPhone());
+        restaurant.setShippingFees(restaurantDetailsBody.getShippingFees());
         //TODO Verify the paypal email
         restaurant.setPaypalEmail(restaurantDetailsBody.getPaypalEmail());
 
