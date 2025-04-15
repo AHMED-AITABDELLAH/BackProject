@@ -4,12 +4,13 @@ import com.savorybites.backend.api.dto.address.AddressRegistrationBody;
 import com.savorybites.backend.model.Address;
 import com.savorybites.backend.model.LocalUser;
 import com.savorybites.backend.model.Restaurant;
+import com.savorybites.backend.model.addressDetailModels.Commune;
+import com.savorybites.backend.model.addressDetailModels.Province;
+import com.savorybites.backend.model.addressDetailModels.Region;
 import com.savorybites.backend.repository.AddressRepository;
-import com.savorybites.backend.repository.RestaurantRepository;
 import com.savorybites.backend.repository.addressDetailRepository.CommuneRepository;
 import com.savorybites.backend.repository.addressDetailRepository.ProvinceRepository;
 import com.savorybites.backend.repository.addressDetailRepository.RegionRepository;
-import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
@@ -225,6 +226,17 @@ public class AddressService {
         return false;
     }
 
+    public List<Region> getRegions(){
+        return regionRepository.findAll();
+    }
+
+    public List<Province> getProvinces(long regionID){
+        return provinceRepository.findAllByRegion_Id(regionID);
+    }
+
+    public List<Commune> getCommunes(long provinceID){
+        return communeRepository.findAllByProvince_Id(provinceID);
+    }
 }
 
 
