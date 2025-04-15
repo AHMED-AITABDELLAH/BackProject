@@ -24,20 +24,18 @@ public class AddressService {
     private final RegionRepository regionRepository;
     private final CommuneRepository communeRepository;
     private final UserService userService;
-    private final RestaurantRepository restaurantRepository;
 
     public AddressService(AddressRepository addressRepository,
                           ProvinceRepository provinceRepository,
                           RegionRepository regionRepository,
                           CommuneRepository communeRepository,
-                          UserService userService, RestaurantRepository restaurantRepository)
+                          UserService userService)
     {
         this.addressRepository = addressRepository;
         this.provinceRepository = provinceRepository;
         this.regionRepository = regionRepository;
         this.communeRepository = communeRepository;
         this.userService = userService;
-        this.restaurantRepository = restaurantRepository;
     }
 
 
@@ -47,6 +45,8 @@ public class AddressService {
                                        AddressRegistrationBody addressRegistrationBody,
                                        Object managedAccount)
     {
+
+        address.setTitle(addressRegistrationBody.getTitle());
         // Set the Region
         address.setRegion(
                 regionRepository
@@ -197,6 +197,12 @@ public class AddressService {
     {
         Optional<Address> optionalAddress = addressRepository
                     .findByUserAndId(user,addressID);
+        return optionalAddress.orElse(null);
+    }
+
+    public Address getDefaultAddress(LocalUser user){
+        Optional<Address> optionalAddress = addressRepository
+                .findByUserAndIsDefaultTrue(user);
         return optionalAddress.orElse(null);
     }
 

@@ -43,7 +43,7 @@ public class Orders {
     @Column(name = "is_paid", nullable = false)
     private boolean isPaid = false;
 
-    @Column(name = "payment_date", nullable = false)
+    @Column(name = "payment_date")
     private LocalDateTime paymentDate;
 
     @Enumerated(EnumType.STRING)

@@ -49,6 +49,13 @@ public class Food {
             inverseJoinColumns = @JoinColumn(name = "category_id"))
     private List<Category> categories = new ArrayList<>();
 
+    @OneToMany(mappedBy = "food", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<CartItem> cartItems = new ArrayList<>();
+
+    @OneToMany(mappedBy = "food", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<OrderItem> orderItems = new ArrayList<>();
+
+
     @PreUpdate
     protected void setDiscountedPrice(){
         discountedPrice =price-(price*discount)/100;

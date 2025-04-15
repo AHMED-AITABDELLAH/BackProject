@@ -10,6 +10,7 @@ public class AddressRegistrationBody
 
 {
 
+    private String title;
     private String Street;
     private long regionID;
     private long provinceID;

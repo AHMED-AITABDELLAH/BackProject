@@ -91,8 +91,9 @@ public class CartService {
         return false;
     }
 
-    private Cart getManagedCart(LocalUser user){
-        return cartRepository.findByUser(user).orElse(null);
+    public Cart getManagedCart(LocalUser user){
+        return cartRepository.findByUser(user)
+                .orElseThrow(() -> new RuntimeException("Cart not found for user"));
     }
 
     @Transactional

@@ -28,22 +28,24 @@ public class Address {
     @OneToOne(mappedBy = "address",orphanRemoval = true)
     private Restaurant restaurant;
 
-
+    @Column(name = "title")
+    private String title;
 
     @Column(name = "street", nullable = false)
     private String street;
 
-    @OneToOne
+    @ManyToOne
     @JoinColumn(name = "region_id")
     private Region region;
 
-    @OneToOne
+    @ManyToOne
     @JoinColumn(name = "province_id")
     private Province province;
 
-    @OneToOne
+    @ManyToOne
     @JoinColumn(name = "commune_id")
     private Commune commune;
+
 
     @Column(name="latitude")
     private Double latitude;

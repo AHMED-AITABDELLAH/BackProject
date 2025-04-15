@@ -31,7 +31,7 @@ public class OrderItem {
     private Orders orders;
 
 
-    public OrderItem(CartItem cartItem, Orders orders){
+    public OrderItem(CartItem cartItem,Orders orders){
         priceAtOrderTime=cartItem.getTotalPrice();
         quantity=cartItem.getQuantity();
         food=cartItem.getFood();
