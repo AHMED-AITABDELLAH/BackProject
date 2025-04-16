@@ -11,7 +11,7 @@ public class AddressRegistrationBody
 {
 
     private String title;
-    private String Street;
+    private String street;
     private long regionID;
     private long provinceID;
     private long communeID;
