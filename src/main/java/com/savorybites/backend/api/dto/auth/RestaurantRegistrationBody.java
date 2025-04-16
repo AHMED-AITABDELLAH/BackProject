@@ -18,6 +18,4 @@ public class RestaurantRegistrationBody {
     private String paypalEmail;
     private String contactEmail;
     private String password;
-    private String address;
-
 }
