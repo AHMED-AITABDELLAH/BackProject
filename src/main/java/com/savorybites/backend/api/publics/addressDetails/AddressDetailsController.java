@@ -6,6 +6,7 @@ import com.savorybites.backend.model.addressDetailModels.Region;
 import com.savorybites.backend.service.AddressService;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 
@@ -26,12 +27,12 @@ public class AddressDetailsController {
     }
 
     @GetMapping("/Provinces")
-    public List<Province> provinces(long regionID){
+    public List<Province> provinces(@RequestParam long regionID){
         return addressService.getProvinces(regionID);
     }
 
     @GetMapping("/Communes")
-    public List<Commune> Commune(long provinceID){
+    public List<Commune> Commune(@RequestParam long provinceID){
         return addressService.getCommunes(provinceID);
     }
 }
