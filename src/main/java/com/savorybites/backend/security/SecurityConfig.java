@@ -39,6 +39,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers
                                 (
+                                        "/public/**",
                                         "/auth/**",
                                         "/admin/**"
                                 ).permitAll()

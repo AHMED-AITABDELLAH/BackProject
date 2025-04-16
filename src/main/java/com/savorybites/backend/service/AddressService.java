@@ -226,7 +226,7 @@ public class AddressService {
         return false;
     }
 
-    public List<Region> getRegions(){
+    public List<Region> getRegions() {
         return regionRepository.findAll();
     }
 

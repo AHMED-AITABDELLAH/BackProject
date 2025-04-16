@@ -30,7 +30,7 @@ public class AddressDetailsController {
         return addressService.getProvinces(regionID);
     }
 
-    @GetMapping("/Regions")
+    @GetMapping("/Communes")
     public List<Commune> Commune(long provinceID){
         return addressService.getCommunes(provinceID);
     }
