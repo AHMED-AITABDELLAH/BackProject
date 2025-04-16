@@ -2,6 +2,7 @@ package com.savorybites.backend.exception;
 
 import com.auth0.jwt.exceptions.JWTDecodeException;
 import com.savorybites.backend.exception.user.*;
+import com.savorybites.backend.service.LoginAttemptService;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -14,6 +15,13 @@ import java.util.Date;
 @ControllerAdvice
 public class MyExceptionHandler extends ResponseEntityExceptionHandler {
 
+
+
+    private final LoginAttemptService loginAttemptService;
+
+    public MyExceptionHandler(LoginAttemptService loginAttemptService) {
+        this.loginAttemptService = loginAttemptService;
+    }
 
     //HANDLING ANY ERROR
     @ExceptionHandler(value = {Exception.class})
@@ -148,6 +156,22 @@ public class MyExceptionHandler extends ResponseEntityExceptionHandler {
         if(errorMsgDesc==null) errorMsgDesc=exception.toString();
         ErrorMessage errorMessage = new ErrorMessage(errorMsgDesc,new Date());
 
+
+        return new ResponseEntity<>(
+                errorMessage,new HttpHeaders(), HttpStatus.UNAUTHORIZED
+        );
+    }
+
+    //HANDLING BadCredentials
+    @ExceptionHandler(value = {BadAdminCredentialsException.class})
+    public ResponseEntity<Object> BadAdminCredentialsException
+    (BadAdminCredentialsException exception)
+    {
+
+        String errorMsgDesc=exception.getLocalizedMessage();
+        if(errorMsgDesc==null) errorMsgDesc=exception.toString();
+        ErrorMessage errorMessage = new ErrorMessage(errorMsgDesc,new Date());
+        loginAttemptService.loginFailed(exception.getClientIP());
 
         return new ResponseEntity<>(
                 errorMessage,new HttpHeaders(), HttpStatus.UNAUTHORIZED

@@ -34,8 +34,7 @@ public class AuthUserController {
             (@Valid @RequestBody LoginBody loginBody) {
 
         String jwtToken = userService.Login(loginBody);
-        LoginResponse response = new LoginResponse();
-        response.setJwt(jwtToken);
+        LoginResponse response = new LoginResponse(jwtToken);
         return ResponseEntity.ok(response);
     }
 

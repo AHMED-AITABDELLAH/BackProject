@@ -3,6 +3,7 @@ package com.savorybites.backend.service;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.interfaces.DecodedJWT;
+import com.savorybites.backend.model.Admin;
 import com.savorybites.backend.model.LocalUser;
 import com.savorybites.backend.model.Restaurant;
 import jakarta.annotation.PostConstruct;
@@ -36,6 +37,8 @@ public class JWTService {
         myAlgorithm = Algorithm.HMAC256(algorithmKey);
     }
 
+
+
     // Generate a token for LocalUser (Client)
     public String generateToken(LocalUser user) {
         return JWT.create()
@@ -50,6 +53,15 @@ public class JWTService {
         return JWT.create()
                 .withClaim(ID_KEY, restaurant.getId().toString())
                 .withClaim(ROLE,restaurant.getRole().toString())
+                .withExpiresAt(new Date(System.currentTimeMillis() + (expiryInSeconds * 1000)))
+                .withIssuer(issuer)
+                .sign(myAlgorithm);
+    }
+    // Generate a token for Restaurant
+    public String generateToken(Admin admin) {
+        return JWT.create()
+                .withClaim(ID_KEY, admin.getId().toString())
+                .withClaim(ROLE,admin.getRole().toString())
                 .withExpiresAt(new Date(System.currentTimeMillis() + (expiryInSeconds * 1000)))
                 .withIssuer(issuer)
                 .sign(myAlgorithm);
