@@ -14,7 +14,8 @@ import java.util.List;
 @RequestMapping("/user/address")
 public class AddressController {
 
-
+    //here if the user want to add an address instead of passing the address entity details one by one
+    //in the url we create a DTO like here
     private final AddressService addressService;
 
     public AddressController(AddressService addressService) {

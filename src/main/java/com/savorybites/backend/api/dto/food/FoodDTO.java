@@ -19,6 +19,7 @@ public class FoodDTO {
     private int discount;
     private double discountedPrice;
     private RestaurantShortDTO restaurant;
+    private long sold;
     private List<String> categoryTitles;
 
     public FoodDTO(Food food) {
@@ -29,6 +30,7 @@ public class FoodDTO {
         this.discount= food.getDiscount();
         this.discountedPrice = food.getDiscountedPrice();
         this.restaurant = new RestaurantShortDTO(food.getRestaurant());
+        this.sold= food.getSold();
         this.categoryTitles=new ArrayList<>();
         for(Category category:food.getCategories())
             categoryTitles.add(category.getTitle());

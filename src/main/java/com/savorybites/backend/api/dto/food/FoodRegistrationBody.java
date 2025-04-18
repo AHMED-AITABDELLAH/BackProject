@@ -2,6 +2,7 @@ package com.savorybites.backend.api.dto.food;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.savorybites.backend.model.Food;
+import com.savorybites.backend.model.FoodStatus;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
@@ -19,6 +20,7 @@ public class FoodRegistrationBody {
     private double price;
     private int discount;
     private Boolean isAvailable;
+    private FoodStatus status;
     //Ignoring this when giving response
     @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private List<Long> categoriesID;
@@ -30,6 +32,7 @@ public class FoodRegistrationBody {
         this.title = food.getTitle();
         this.description = food.getDescription();
         this.image = food.getImage();
+        this.status = food.getStatus();
         this.price = food.getPrice();
         this.discount = food.getDiscount();
         this.isAvailable = food.getIsAvailable();

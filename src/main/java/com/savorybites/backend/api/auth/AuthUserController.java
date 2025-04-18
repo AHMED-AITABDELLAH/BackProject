@@ -17,7 +17,7 @@ public class AuthUserController {
 
     private final UserService userService;
 
-    public AuthUserController(UserService userService, PasswordResetTokenService passwordResetTokenService) {
+    public AuthUserController(UserService userService) {
         this.userService = userService;
     }
 
@@ -31,11 +31,11 @@ public class AuthUserController {
 
     @PostMapping("/login")
     public ResponseEntity<LoginResponse> loginUser
-            (@Valid @RequestBody LoginBody loginBody) {
+            (@Valid @RequestBody LoginBody loginBody) {//I used RwquestBody for the email & passwod instead of passin them in the url
+
 
         String jwtToken = userService.Login(loginBody);
-        LoginResponse response = new LoginResponse();
-        response.setJwt(jwtToken);
+        LoginResponse response = new LoginResponse(jwtToken);
         return ResponseEntity.ok(response);
     }
 

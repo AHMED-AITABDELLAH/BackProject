@@ -1,6 +1,7 @@
 package com.savorybites.backend.repository;
 
 import com.savorybites.backend.model.Restaurant;
+import com.savorybites.backend.model.Status;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
@@ -14,4 +15,7 @@ public interface RestaurantRepository extends JpaRepository<Restaurant, Long> {
 
     List<Restaurant> findAllByIsApprovedIsTrue();
 
+    List<Restaurant> findAllByStatus(Status status);
+
+    long countByStatus(Status status);
 }

@@ -1,7 +1,9 @@
 package com.savorybites.backend.security;
 
+import com.savorybites.backend.model.Admin;
 import com.savorybites.backend.model.LocalUser;
 import com.savorybites.backend.model.Restaurant;
+import com.savorybites.backend.repository.AdminRepository;
 import com.savorybites.backend.repository.VerificationRepository.BlacklistedTokenRepository;
 import com.savorybites.backend.repository.UserRepository;
 import com.savorybites.backend.repository.RestaurantRepository;
@@ -27,12 +29,14 @@ public class JWTRequestFilter extends OncePerRequestFilter {
 
     private final JWTService jwtService;
     private final UserRepository userRepository;
+    private final AdminRepository adminRepository;
     private final BlacklistedTokenService blacklistedTokenService;
     private final RestaurantRepository restaurantRepository;
 
-    public JWTRequestFilter(JWTService jwtService, UserRepository userRepository, BlacklistedTokenRepository blacklistedTokenRepository, BlacklistedTokenService blacklistedTokenService, RestaurantRepository restaurantRepository) {
+    public JWTRequestFilter(JWTService jwtService, UserRepository userRepository,AdminRepository adminRepository, BlacklistedTokenService blacklistedTokenService, RestaurantRepository restaurantRepository) {
         this.jwtService = jwtService;
         this.userRepository = userRepository;
+        this.adminRepository = adminRepository;
         this.blacklistedTokenService = blacklistedTokenService;
         this.restaurantRepository = restaurantRepository;
     }
@@ -86,6 +90,22 @@ public class JWTRequestFilter extends OncePerRequestFilter {
                     UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken
                             (
                                     restaurant,
+                                    null,
+                                    List.of(new SimpleGrantedAuthority(role))
+                            );
+                    authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                    SecurityContextHolder.getContext().setAuthentication(authentication);
+                }
+
+            }else if ("ROLE_ADMIN".equals(role))
+            {
+                Optional<Admin> adminOptional= adminRepository.findAdminById(accountID);
+                if(adminOptional.isPresent())
+                {
+                    Admin admin = adminOptional.get();
+                    UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken
+                            (
+                                    admin,
                                     null,
                                     List.of(new SimpleGrantedAuthority(role))
                             );

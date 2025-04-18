@@ -4,13 +4,14 @@ import com.savorybites.backend.api.dto.restaurant.RestaurantDetailsBody;
 import com.savorybites.backend.exception.user.*;
 import com.savorybites.backend.model.Address;
 import com.savorybites.backend.model.Role;
+import com.savorybites.backend.model.Status;
 import com.savorybites.backend.repository.VerificationRepository.PasswordResetTokenRepository;
 import com.savorybites.backend.model.verificationModels.PasswordResetToken;
 import com.savorybites.backend.model.verificationModels.VerificationToken;
 import com.savorybites.backend.repository.RestaurantRepository;
 import com.savorybites.backend.repository.VerificationRepository.VerificationTokenRepository;
-import jakarta.transaction.Transactional;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.web.firewall.RequestRejectedException;
 import org.springframework.stereotype.Service;
 import com.savorybites.backend.api.dto.auth.RestaurantRegistrationBody;
 import com.savorybites.backend.model.Restaurant;
@@ -66,6 +67,8 @@ public class RestaurantService {
         restaurant.setShippingFees(body.getShippingFees());
         restaurant.setIsApproved(false);
         restaurant.setIsVerified(false);
+        restaurant.setStatus(Status.PENDING_APPROVAL);
+
 
         // Step 2: Create the address and link both ways
         Address address = new Address();
@@ -96,9 +99,8 @@ public class RestaurantService {
                 .findByEmailIgnoreCase(loginBody.getEmail())
                 .orElseThrow(UserNotFoundException::new);
 
-        if (!encryptionService.verifyPassword(loginBody.getPassword(), restaurant.getPassword())) {
-            throw new PasswordIncorrectException();
-        }
+        if(restaurant.getStatus()==Status.BANNED || restaurant.getStatus()==Status.DECLINED)
+            throw new RequestRejectedException("You are not allowed on the platform!");
 
         if (restaurant.getIsApproved()) {
             if(!restaurant.getIsVerified()) {
@@ -108,9 +110,9 @@ public class RestaurantService {
                 if(
                         verificationTokens.isEmpty()
                                 ||
-                        verificationTokens.get(verificationTokens.size()-1)
-                                .getExpiryDate()
-                                .isBefore(Instant.now())
+                                verificationTokens.get(verificationTokens.size()-1)
+                                        .getExpiryDate()
+                                        .isBefore(Instant.now())
                 )
                 //We create a new Verification Token we save it in the DB
                 {
@@ -121,8 +123,11 @@ public class RestaurantService {
                 }
                 throw new UserNotVerified();
             }
-        }else
-            throw new UserNotApproved();
+        }
+        else throw new UserNotApproved();
+
+        if (!encryptionService.verifyPassword(loginBody.getPassword(), restaurant.getPassword()))
+            throw new PasswordIncorrectException();
 
         return jwtService.generateToken(restaurant); // Overload if needed
     }

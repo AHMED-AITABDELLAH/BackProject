@@ -51,6 +51,10 @@ public class Restaurant {
     @Column(name = "is_approved")
     private Boolean isApproved = false;
 
+    @JsonIgnore
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status")
+    private Status status = Status.PENDING_APPROVAL;
 
     @JsonIgnore
     @Column(name = "is_verified")

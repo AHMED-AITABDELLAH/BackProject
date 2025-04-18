@@ -35,8 +35,7 @@ public class AuthRestaurantController {
             (@Valid @RequestBody LoginBody loginBody) {
 
         String jwtToken = restaurantService.loginRestaurant(loginBody);
-        LoginResponse response = new LoginResponse();
-        response.setJwt(jwtToken);
+        LoginResponse response = new LoginResponse(jwtToken);
         return ResponseEntity.ok(response);
     }
 
