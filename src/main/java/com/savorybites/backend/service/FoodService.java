@@ -5,6 +5,7 @@ import com.savorybites.backend.api.dto.food.FoodRegistrationBody;
 import com.savorybites.backend.exception.user.UserNotFoundException;
 import com.savorybites.backend.model.Category;
 import com.savorybites.backend.model.Food;
+import com.savorybites.backend.model.FoodStatus;
 import com.savorybites.backend.model.Restaurant;
 import com.savorybites.backend.repository.CategoryRepository;
 import com.savorybites.backend.repository.FoodRepository;
@@ -38,25 +39,25 @@ public class FoodService {
     /// ////////////////////////////////// Containers//////////////////////////
 
     private List<Food> getOnSaleItems(int discountBase){
-        return foodRepository.findAllByDiscountGreaterThan(discountBase);
+        return foodRepository.findAllByDiscountGreaterThanAndIsFlaggedIsFalse(discountBase);
     }
 
     private List<Food> getListOfFood(){
-        return foodRepository.findAllByIsAvailableTrue();
+        return foodRepository.findAllByIsAvailableTrueAndIsFlaggedIsFalse();
     }
 
 
     private List<Food> getFoodFromRestaurant(long id){
-        return foodRepository.findByRestaurantIdAndIsAvailableTrue(id);
+        return foodRepository.findByRestaurantIdAndIsAvailableTrueAndIsFlaggedIsFalse(id);
     }
 
     private List<Food> getFoodByCategory(long categoryID){
-        return foodRepository.findByCategories_Id(categoryID);
+        return foodRepository.findByCategories_IdAndIsFlaggedIsFalse(categoryID);
     }
 
     private List<Food> getFoodByCategories(List<Long> categoriesID){
         List<Category> categoryList =categoryService.getCategoriesFromIDs(categoriesID);
-        return foodRepository.findDistinctByCategoriesInAndIsAvailableIsTrue(categoryList);
+        return foodRepository.findDistinctByCategoriesInAndIsAvailableIsTrueAndIsFlaggedIsFalse(categoryList);
     }
 
 
@@ -80,7 +81,7 @@ public class FoodService {
                 .collect(Collectors.toList());
     }
 
-    //Get ( popular food items )
+    //Get (popular food items)
     public List<Food> PopularFoodItems(){
         List<Food> foodList=getListOfFood();
         if (foodList.isEmpty())
@@ -111,7 +112,7 @@ public class FoodService {
         return foodList;
     }
 
-    //List all the food of a List of categories
+    //List all the food of some categories
     public List<Food> foodByCategories(List<Long> categoriesID){
         List<Food> foodList=getFoodByCategories(categoriesID);
         if(foodList.isEmpty())
@@ -133,6 +134,11 @@ public class FoodService {
         food.setDiscount(foodRegistrationBody.getDiscount());
         food.setCategories(categoryRepository.findAllById(foodRegistrationBody.getCategoriesID()));
         food.setIsAvailable(foodRegistrationBody.getIsAvailable());
+        if (food.getIsAvailable())
+            food.setStatus(FoodStatus.AVAILABLE);
+        else
+            food.setStatus(FoodStatus.UNAVAILABLE);
+
     }
 
     //Register a food
@@ -152,7 +158,7 @@ public class FoodService {
     public ResponseEntity<Object> updateFood(Restaurant restaurant,
                                      FoodRegistrationBody foodRegistrationBody,
                                      long foodID){
-        Optional<Food> opFood=foodRepository.findFoodByIdAndRestaurant(foodID,restaurant);
+        Optional<Food> opFood=foodRepository.findFoodByIdAndRestaurantAndIsFlaggedIsFalse(foodID,restaurant);
         if(opFood.isPresent()){
             Food food= opFood.get();
             assignValuesToFood(foodRegistrationBody, food);
@@ -167,7 +173,7 @@ public class FoodService {
     //Delete a food
     @Transactional
     public boolean deleteFood(long foodID,Restaurant restaurant){
-        Optional<Food> opFood=foodRepository.findFoodByIdAndRestaurant(foodID,restaurant);
+        Optional<Food> opFood=foodRepository.findFoodByIdAndRestaurantAndIsFlaggedIsFalse(foodID,restaurant);
         if(opFood.isPresent()){
             foodRepository.deleteByIdAndRestaurant(foodID,restaurant);
             return true;
@@ -175,13 +181,20 @@ public class FoodService {
         return false;
     }
 
-    //Disable food
+    //toggle food
     @Transactional
     public Boolean toggleFood(long foodID,Restaurant restaurant){
-        Optional<Food> opFood=foodRepository.findFoodByIdAndRestaurant(foodID,restaurant);
+        Optional<Food> opFood=foodRepository.findFoodByIdAndRestaurantAndIsFlaggedIsFalse(foodID,restaurant);
         if(opFood.isPresent()){
             Food food= opFood.get();
             food.setIsAvailable(!food.getIsAvailable());
+
+            if (food.getIsAvailable())
+                food.setStatus(FoodStatus.AVAILABLE);
+            else
+                food.setStatus(FoodStatus.UNAVAILABLE);
+
+
             foodRepository.save(food);
             return food.getIsAvailable();
         }
@@ -191,7 +204,7 @@ public class FoodService {
 
     //Get FoodItems of the LoggedIn Restaurant
     public List<FoodDetailsBody> getRestaurantFood(Restaurant restaurant){
-        List<Food> foodList = foodRepository.findByRestaurant(restaurant);
+        List<Food> foodList = foodRepository.findByRestaurantAndIsFlaggedIsFalse(restaurant);
         List<FoodDetailsBody> foodDetailsBodies = new ArrayList<>();
         for (Food food:foodList){
             foodDetailsBodies.add(new FoodDetailsBody(food));
@@ -202,7 +215,7 @@ public class FoodService {
 
     //Get food by ID
     public FoodDetailsBody getFood(long foodID, Restaurant restaurant){
-        Optional<Food> opFood = foodRepository.findFoodByIdAndRestaurant(foodID, restaurant);
+        Optional<Food> opFood = foodRepository.findFoodByIdAndRestaurantAndIsFlaggedIsFalse(foodID, restaurant);
         if (opFood.isPresent())
             return new FoodDetailsBody(opFood.get());
         else

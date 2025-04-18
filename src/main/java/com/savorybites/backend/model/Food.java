@@ -43,6 +43,12 @@ public class Food {
     @Column(name="is_available")
     private Boolean isAvailable;
 
+    @Column(name="is_flagged")
+    private Boolean isFlagged;
+
+    @Column(name="status")
+    private FoodStatus status;
+
     @Column(name="sold")
     private long sold;
 
@@ -68,6 +74,8 @@ public class Food {
     protected void onCreate(){
         if(isAvailable==null)
             isAvailable=true;
+        if(isFlagged==null)
+            isFlagged=false;
         discountedPrice =price-(price*discount)/100;
         sold=0;
     }

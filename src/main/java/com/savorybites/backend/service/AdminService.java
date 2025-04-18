@@ -65,16 +65,13 @@ public class AdminService {
         if (loginAttemptService.isBlocked(clientIP))
             throw new RequestRejectedException("Too many failed login attempts. Please try again later.");
 
-        System.out.println("email : "+loginBody.getEmail() +"\n password : "+loginBody.getPassword());
 
         Optional<Admin> optionalAdmin = adminRepository.findByEmail(loginBody.getEmail());
         if (optionalAdmin.isEmpty())
             throw new BadAdminCredentialsException(clientIP);
 
-        System.out.println("Admin is captured");
         Admin admin = optionalAdmin.get();
         boolean success =encryptionService.verifyPassword(loginBody.getPassword(),admin.getPassword());
-        System.out.println("Admin is captured and suckseed is "+success);
                 if(success){
                     loginAttemptService.loginSucceeded(clientIP);
 
@@ -91,6 +88,12 @@ public class AdminService {
 
 
     /// /////////Restaurant Logic
+
+    public Restaurant getRestaurant(Admin admin, long restaurantID){
+        Admin theAdmin = verifyAdmin(admin);
+        return restaurantRepository.findById(restaurantID).orElseThrow();
+    }
+
     public ResponseEntity<String> approveRestaurant(Admin admin, long restaurantID){
 
         Admin theAdmin =verifyAdmin(admin);
@@ -175,9 +178,9 @@ public class AdminService {
     }
 
 
-    public List<Restaurant> getRestaurantRegistrationRequests(Admin admin){
+    public List<Restaurant> getRestaurantByStatus(Admin admin,Status status){
         Admin theAdmin=verifyAdmin(admin);
-        return restaurantRepository.findAllByStatus(Status.PENDING_APPROVAL);
+        return restaurantRepository.findAllByStatus(status);
     }
 
     public List<Restaurant> getAllRestaurants(Admin admin){
@@ -185,20 +188,58 @@ public class AdminService {
         return restaurantRepository.findAll();
     }
 
-    public Restaurant getRestaurantRequestDetails(Admin admin,long restaurantID ){
-        return restaurantRepository.findRestaurantById(restaurantID).orElseThrow();
-    }
+
+    /// ///////Food Logic
 
     public List<Food> getAllFood(Admin admin){
         Admin theAdmin = verifyAdmin(admin);
         return foodRepository.findAll();
     }
 
+    public List<Food> getAllFoodByStatus(Admin admin,FoodStatus foodStatus){
+        Admin theAdmin = verifyAdmin(admin);
+        return foodRepository.findAllByStatus(foodStatus);
+    }
+
+    public Food getFood(Admin admin, long foodID){
+        Admin theAdmin = verifyAdmin(admin);
+        return foodRepository.findById(foodID).orElseThrow();
+    }
+
+    public ResponseEntity<String> toggleFlagOnFood(Admin admin, long foodID){
+        Admin theAdmin = verifyAdmin(admin);
+        Optional<Food> optionalFood = foodRepository.findById(foodID);
+        Food flageFood = optionalFood.orElseThrow();
+        flageFood.setIsFlagged(!flageFood.getIsFlagged());
+        if(flageFood.getIsFlagged()){
+            flageFood.setStatus(FoodStatus.FLAGGED);
+            foodRepository.save(flageFood);
+            return ResponseEntity.ok("The food is flagged successfully.");
+        }else{
+            flageFood.setStatus(FoodStatus.AVAILABLE);
+            foodRepository.save(flageFood);
+            return ResponseEntity.ok("The food is unflagged successfully.");
+        }
+
+    }
+
+
 
     /// ////////Users Logic
+
+    public LocalUser getUser(Admin admin, long userID){
+        Admin theAdmin = verifyAdmin(admin);
+        return userRepository.findById(userID).orElseThrow();
+    }
+
     public List<LocalUser> getAllUsers(Admin admin){
         Admin theAdmin = verifyAdmin(admin);
         return userRepository.findAll();
+    }
+
+    public List<LocalUser> getUsersByStatus(Admin admin,Status status){
+        Admin theAdmin = verifyAdmin(admin);
+        return userRepository.findAllByStatus(status);
     }
 
     public ResponseEntity<String> banUser(Admin admin, long userID){
@@ -242,6 +283,15 @@ public class AdminService {
         return ordersRepository.findAll();
     }
 
+    public Orders getOrder(Admin admin, long orderID){
+        Admin theAdmin = verifyAdmin(admin);
+        return ordersRepository.findById(orderID).orElseThrow();
+    }
+
+    public List<Orders> getAllOrdersByStatus(Admin admin, OrderStatus orderStatus) {
+        Admin theAdmin = verifyAdmin(admin);
+        return ordersRepository.findAllByStatus(orderStatus);
+    }
 
 
 

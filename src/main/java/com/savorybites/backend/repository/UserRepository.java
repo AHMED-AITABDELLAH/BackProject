@@ -5,6 +5,7 @@ import com.savorybites.backend.model.Status;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 
@@ -17,4 +18,6 @@ public interface UserRepository extends JpaRepository<LocalUser, Long> {
     Optional<LocalUser> findLocalUserById(Long id);
 
     long countByStatus(Status status);
+
+    List<LocalUser> findAllByStatus(Status status);
 }

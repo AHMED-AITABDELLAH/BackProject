@@ -2,6 +2,7 @@ package com.savorybites.backend.repository;
 
 import com.savorybites.backend.model.Category;
 import com.savorybites.backend.model.Food;
+import com.savorybites.backend.model.FoodStatus;
 import com.savorybites.backend.model.Restaurant;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -15,32 +16,26 @@ public interface FoodRepository extends JpaRepository<Food, Long> {
 
     //this method is for the user interface
     //to get all available food item listed in a restaurant by id
-    List<Food> findByRestaurantIdAndIsAvailableTrue(Long id);
+    List<Food> findByRestaurantIdAndIsAvailableTrueAndIsFlaggedIsFalse(Long id);
 
     //this method is for the restaurant interface to get all its listed food items
-    List<Food> findByRestaurant(Restaurant restaurant);
+    List<Food> findByRestaurantAndIsFlaggedIsFalse(Restaurant restaurant);
 
     //this method for showing all the available food in the data
-    List<Food> findAllByIsAvailableTrue();
+    List<Food> findAllByIsAvailableTrueAndIsFlaggedIsFalse();
 
-    //this method for showing a promotion (example : discount > 60%)
-    List<Food> findAllByDiscountGreaterThan(int discountIsGreaterThan);
+    //this method for showing a promotion (discount > 10%)
+    List<Food> findAllByDiscountGreaterThanAndIsFlaggedIsFalse(int discountIsGreaterThan);
 
-    Optional<Food> findFoodByIdAndRestaurant(Long foodID, Restaurant restaurant);
-
-
+    Optional<Food> findFoodByIdAndRestaurantAndIsFlaggedIsFalse(Long foodID, Restaurant restaurant);
 
 
-
-    //this method to List food by multiple categories
-    List<Food> findDistinctByCategoriesInAndIsAvailableIsTrue(Collection<Category> categories);
+    List<Food> findDistinctByCategoriesInAndIsAvailableIsTrueAndIsFlaggedIsFalse(Collection<Category> categories);
 
     //this method List food by a category
-    List<Food> findByCategories_Id(Long id);
+    List<Food> findByCategories_IdAndIsFlaggedIsFalse(Long id);
 
     void deleteByIdAndRestaurant(Long id, Restaurant restaurant);
-
-    long countBySoldGreaterThan(long sold);
 
 
     @Query("SELECT max(discountedPrice) FROM Food ORDER BY discountedPrice")
@@ -49,6 +44,5 @@ public interface FoodRepository extends JpaRepository<Food, Long> {
     BigDecimal findLeastExpensiveFoodPrice();
 
 
-
-
+    List<Food> findAllByStatus(FoodStatus status);
 }
