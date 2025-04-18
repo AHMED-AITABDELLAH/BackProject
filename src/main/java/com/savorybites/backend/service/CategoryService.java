@@ -4,7 +4,9 @@ import com.savorybites.backend.model.Category;
 import com.savorybites.backend.repository.CategoryRepository;
 import org.springframework.stereotype.Service;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class CategoryService {

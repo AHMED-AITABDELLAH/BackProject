@@ -12,6 +12,8 @@ import java.util.Optional;
 public interface FoodRepository extends JpaRepository<Food, Long> {
 
     //this method is for the user interface
+
+
     //to get all available food item listed in a restaurant by id
     List<Food> findByRestaurantIdAndIsAvailableTrue(Long id);
 
@@ -21,7 +23,12 @@ public interface FoodRepository extends JpaRepository<Food, Long> {
     //this method for showing all the available food in the data
     List<Food> findAllByIsAvailableTrue();
 
-    //this method for showing a promotion (example : discount > 60%)
+    //this to show all the food that is popular
+    List<Food> findByIsAvailableTrueOrderBySoldDesc();
+
+
+
+    //this method for showing a promotion (example : discount > 10%)
     List<Food> findAllByDiscountGreaterThan(int discountIsGreaterThan);
 
     Optional<Food> findFoodByIdAndRestaurant(Long foodID, Restaurant restaurant);
@@ -37,4 +44,5 @@ public interface FoodRepository extends JpaRepository<Food, Long> {
     List<Food> findByCategories_Id(Long id);
 
     void deleteByIdAndRestaurant(Long id, Restaurant restaurant);
+
 }

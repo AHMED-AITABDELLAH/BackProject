@@ -45,6 +45,10 @@ public class FoodService {
         return foodRepository.findAllByIsAvailableTrue();
     }
 
+    private List<Food> getListOfPopularFood(){
+        return foodRepository.findByIsAvailableTrueOrderBySoldDesc();
+    }
+
 
     private List<Food> getFoodFromRestaurant(long id){
         return foodRepository.findByRestaurantIdAndIsAvailableTrue(id);
@@ -82,7 +86,7 @@ public class FoodService {
 
     //Get ( popular food items )
     public List<Food> PopularFoodItems(){
-        List<Food> foodList=getListOfFood();
+        List<Food> foodList=getListOfPopularFood();
         if (foodList.isEmpty())
             return null;
         Collections.shuffle(foodList);

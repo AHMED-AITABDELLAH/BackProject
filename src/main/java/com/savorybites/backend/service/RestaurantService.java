@@ -217,4 +217,18 @@ public class RestaurantService {
         //TODO idk
         throw new UserNotFoundException();
     }
+
+
+
+
+
+    public List<Restaurant> getRestaurants(){
+        return restaurantRepository.findAllByIsApprovedIsTrue();
+    }
+
+    public List<Restaurant> getPopularRestaurants(){
+        return restaurantRepository.findAllByIsApprovedIsTrue();
+    }
+
+
 }
