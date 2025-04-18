@@ -65,7 +65,7 @@ public class MyExceptionHandler extends ResponseEntityExceptionHandler {
 
 
         return new ResponseEntity<>(
-                errorMessage,new HttpHeaders(), HttpStatus.BAD_REQUEST
+                errorMessage,new HttpHeaders(), HttpStatus.NOT_FOUND
         );
     }
 

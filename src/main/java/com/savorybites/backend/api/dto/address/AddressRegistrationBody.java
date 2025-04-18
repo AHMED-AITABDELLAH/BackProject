@@ -10,6 +10,7 @@ public class AddressRegistrationBody
 
 {
 
+    //have all the data needed for adding an address
     private String title;
     private String Street;
     private long regionID;
@@ -20,5 +21,8 @@ public class AddressRegistrationBody
     private boolean isDefault;
     private boolean isCoordinationActivated;
 
-}
+}//We got our data to the database using this dto
+//Here where we use @RequestBody
+//Hope you got the point
+
 

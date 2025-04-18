@@ -1,14 +1,14 @@
 package com.savorybites.backend.service;
 
 
+import com.savorybites.backend.api.dto.admin.*;
 import com.savorybites.backend.api.dto.auth.LoginBody;
 import com.savorybites.backend.api.dto.auth.LoginResponse;
 import com.savorybites.backend.exception.BadAdminCredentialsException;
-import com.savorybites.backend.model.Admin;
-import com.savorybites.backend.model.Restaurant;
+import com.savorybites.backend.exception.user.UserNotFoundException;
+import com.savorybites.backend.model.*;
 import com.savorybites.backend.model.verificationModels.VerificationToken;
-import com.savorybites.backend.repository.AdminRepository;
-import com.savorybites.backend.repository.RestaurantRepository;
+import com.savorybites.backend.repository.*;
 import com.savorybites.backend.repository.VerificationRepository.VerificationTokenRepository;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
@@ -17,6 +17,8 @@ import org.springframework.security.web.firewall.RequestRejectedException;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.math.BigDecimal;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -30,8 +32,11 @@ public class AdminService {
     private final VerificationTokenRepository verificationTokenRepository;
     public final RestaurantRepository restaurantRepository;
     public final RestaurantService restaurantService;
+    private final UserRepository userRepository;
+    private final FoodRepository foodRepository;
+    private final OrdersRepository ordersRepository;
 
-    public AdminService(LoginAttemptService loginAttemptService, AdminRepository adminRepository, EncryptionService encryptionService, JWTService jwtService, EmailService emailService, VerificationTokenRepository verificationTokenRepository, RestaurantRepository restaurantRepository, RestaurantService restaurantService) {
+    public AdminService(LoginAttemptService loginAttemptService, AdminRepository adminRepository, EncryptionService encryptionService, JWTService jwtService, EmailService emailService, VerificationTokenRepository verificationTokenRepository, RestaurantRepository restaurantRepository, RestaurantService restaurantService, UserRepository userRepository, FoodRepository foodRepository, OrdersRepository ordersRepository) {
         this.loginAttemptService = loginAttemptService;
         this.adminRepository = adminRepository;
         this.encryptionService = encryptionService;
@@ -40,6 +45,9 @@ public class AdminService {
         this.verificationTokenRepository = verificationTokenRepository;
         this.restaurantRepository = restaurantRepository;
         this.restaurantService = restaurantService;
+        this.userRepository = userRepository;
+        this.foodRepository = foodRepository;
+        this.ordersRepository = ordersRepository;
     }
 
     public String getClientIP(HttpServletRequest request) {
@@ -80,6 +88,9 @@ public class AdminService {
         return adminRepository.findById(admin.getId()).orElseThrow();
     }
 
+
+
+    /// /////////Restaurant Logic
     public ResponseEntity<String> approveRestaurant(Admin admin, long restaurantID){
 
         Admin theAdmin =verifyAdmin(admin);
@@ -92,6 +103,7 @@ public class AdminService {
             return ResponseEntity.badRequest().body("Restaurant already approved");
 
         restaurant.setIsApproved(true);
+        restaurant.setStatus(Status.APPROVED);
         restaurantRepository.save(restaurant);
 
         // Now generate verification token and send email
@@ -99,5 +111,221 @@ public class AdminService {
         verificationTokenRepository.save(token);
         emailService.sendRestaurantVerificationEmail(token);
         return ResponseEntity.ok("The Restaurant has been approved.");
+
+
     }
+
+    public ResponseEntity<String> declineRestaurant(Admin admin, long restaurantID){
+
+        Admin theAdmin =verifyAdmin(admin);
+
+        Restaurant restaurant = restaurantRepository
+                .findRestaurantById(restaurantID)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Restaurant not found"));
+
+        if (restaurant.getIsApproved())
+            return ResponseEntity.badRequest().body("Restaurant already approved");
+
+        restaurant.setIsApproved(false);
+        restaurant.setStatus(Status.DECLINED);
+        restaurantRepository.save(restaurant);
+
+        // Now generate verification token and send email
+
+        emailService.sendAccountIsNotApproved(restaurant);
+        return ResponseEntity.ok("The Restaurant has been declined.");
+
+
+    }
+
+    public ResponseEntity<String> banRestaurant(Admin admin, long restaurantID){
+
+        Admin theAdmin =verifyAdmin(admin);
+
+        Restaurant restaurant = restaurantRepository
+                .findRestaurantById(restaurantID)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Restaurant not found"));
+
+
+        restaurant.setStatus(Status.BANNED);
+        restaurantRepository.save(restaurant);
+
+        // Now generate verification token and send email
+
+        emailService.sendAccountIsNotApproved(restaurant);
+        return ResponseEntity.ok("The Restaurant has been banned.");
+
+
+    }
+
+    public ResponseEntity<String> deleteRestaurant(Admin admin, long restaurantID){
+
+        Admin theAdmin =verifyAdmin(admin);
+
+        Restaurant restaurant = restaurantRepository
+                .findRestaurantById(restaurantID)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Restaurant not found"));
+
+
+       restaurantRepository.delete(restaurant);
+
+        return ResponseEntity.ok("The Restaurant has been deleted.");
+
+
+    }
+
+
+    public List<Restaurant> getRestaurantRegistrationRequests(Admin admin){
+        Admin theAdmin=verifyAdmin(admin);
+        return restaurantRepository.findAllByStatus(Status.PENDING_APPROVAL);
+    }
+
+    public List<Restaurant> getAllRestaurants(Admin admin){
+        Admin theAdmin=verifyAdmin(admin);
+        return restaurantRepository.findAll();
+    }
+
+    public Restaurant getRestaurantRequestDetails(Admin admin,long restaurantID ){
+        return restaurantRepository.findRestaurantById(restaurantID).orElseThrow();
+    }
+
+    public List<Food> getAllFood(Admin admin){
+        Admin theAdmin = verifyAdmin(admin);
+        return foodRepository.findAll();
+    }
+
+
+    /// ////////Users Logic
+    public List<LocalUser> getAllUsers(Admin admin){
+        Admin theAdmin = verifyAdmin(admin);
+        return userRepository.findAll();
+    }
+
+    public ResponseEntity<String> banUser(Admin admin, long userID){
+
+        Admin theAdmin =verifyAdmin(admin);
+
+        LocalUser user = userRepository
+                .findLocalUserById(userID)
+                .orElseThrow(UserNotFoundException::new);
+
+
+        user.setStatus(Status.BANNED);
+        userRepository.save(user);
+
+        return ResponseEntity.ok("The user has been banned.");
+
+
+    }
+
+    public ResponseEntity<String> deleteUser(Admin admin, long userID){
+
+        Admin theAdmin =verifyAdmin(admin);
+
+        LocalUser user = userRepository
+                .findLocalUserById(userID)
+                .orElseThrow(UserNotFoundException::new);
+
+
+        userRepository.delete(user);
+
+        return ResponseEntity.ok("The user has been deleted.");
+
+
+    }
+
+
+
+    /// ///////Orders Logic
+    public List<Orders> getAllOrders(Admin admin){
+        Admin theAdmin = verifyAdmin(admin);
+        return ordersRepository.findAll();
+    }
+
+
+
+
+    /// ////Dashboard Statistics
+
+
+    private FoodStatistics getFoodStatistics(){
+        FoodStatistics foodStatistics = new FoodStatistics();
+        foodStatistics.setTotalFoodCount(foodRepository.count());
+        foodStatistics.setMostExpensiveFoodPrice(foodRepository.findMostExpensiveFoodPrice());
+        foodStatistics.setLeastExpensiveFoodPrice(foodRepository.findLeastExpensiveFoodPrice());
+        return foodStatistics;
+    }
+
+    private UserStatistics getUserStatistics(){
+        UserStatistics userStatistics=new UserStatistics();
+        userStatistics.setTotalUserCount(userRepository.count());
+        userStatistics.setBannedUserCount(userRepository.countByStatus(Status.BANNED));
+        userStatistics.setVerifiedUserCount(userRepository.countByStatus(Status.VERIFIED));
+        return userStatistics;
+    }
+
+    private RestaurantStatistics getRestaurantStatistics(){
+        RestaurantStatistics restaurantStatistics=new RestaurantStatistics();
+        restaurantStatistics.setTotalRestaurantCount(restaurantRepository.count());
+        restaurantStatistics.setBannedRestaurantCount(restaurantRepository.countByStatus(Status.BANNED));
+        restaurantStatistics.setVerifiedRestaurantCount(restaurantRepository.countByStatus(Status.VERIFIED));
+        restaurantStatistics.setDeclinedRestaurantCount(restaurantRepository.countByStatus(Status.DECLINED));
+        restaurantStatistics.setApprovedRestaurantCount(restaurantRepository.countByStatus(Status.APPROVED));
+        restaurantStatistics.setPendingRestaurantCount(restaurantRepository.countByStatus(Status.PENDING_APPROVAL));
+        return restaurantStatistics;
+    }
+
+    private List<WeeklyOrderStats> getWeeklyOrderStats() {
+        List<Object[]> rawData = ordersRepository.findWeeklyOrderStats();
+
+        return rawData.stream().map(obj -> {
+            WeeklyOrderStats dto = new WeeklyOrderStats();
+            dto.setWeekLabel((String) obj[0]);
+            dto.setDeliveredOrdersCount(((Number) obj[1]).intValue());
+            dto.setCancelledOrdersCount(((Number) obj[2]).intValue());
+            dto.setDeclinedOrdersCount(((Number) obj[3]).intValue());
+            return dto;
+        }).toList();
+    }
+
+    private List<MonthlyRevenue> getMonthlyRevenue() {
+        List<Object[]> rawData = ordersRepository.findMonthlyRevenueRaw();
+        return rawData.stream()
+                .map(row -> new MonthlyRevenue(
+                        (String) row[0], (BigDecimal) row[1]))
+                .toList();
+    }
+
+
+    private RevenueStatistics getRevenueStatistics(){
+        RevenueStatistics revenueStatistics = new RevenueStatistics();
+        revenueStatistics.setTotalRevenue(ordersRepository.findTotalRevenue());
+        revenueStatistics.setMonthlyRevenue(getMonthlyRevenue());
+        return revenueStatistics;
+    }
+
+
+    private OrderStatistics getOrderStatistics(){
+        OrderStatistics orderStatistics = new OrderStatistics();
+        orderStatistics.setTotalOrderCount(ordersRepository.count());
+        orderStatistics.setWeeklyOrderStats(getWeeklyOrderStats());
+        return orderStatistics;
+    }
+
+
+    public DashboardStatistics getDashboardStats(Admin admin) {
+        Admin theAdmin = verifyAdmin(admin);
+        return new DashboardStatistics(
+                getUserStatistics(),
+                getRestaurantStatistics(),
+                getFoodStatistics(),
+                getOrderStatistics(),
+                getRevenueStatistics()
+
+        );
+    }
+
+
+
 }
+

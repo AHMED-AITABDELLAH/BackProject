@@ -31,7 +31,8 @@ public class AuthUserController {
 
     @PostMapping("/login")
     public ResponseEntity<LoginResponse> loginUser
-            (@Valid @RequestBody LoginBody loginBody) {
+            (@Valid @RequestBody LoginBody loginBody) {//I used RwquestBody for the email & passwod instead of passin them in the url
+
 
         String jwtToken = userService.Login(loginBody);
         LoginResponse response = new LoginResponse(jwtToken);

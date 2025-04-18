@@ -19,14 +19,12 @@ public class RestaurantController {
         this.restaurantService = restaurantService;
     }
 
-    //TODO ADD the  1 address to it
     @GetMapping("/accountDetails")
     public Restaurant getLoggedInRestaurantDetails (@AuthenticationPrincipal Restaurant restaurant)
     {
         return restaurant;
     }
 
-    //TODO ADD the  1 address to it
     @Transactional
     @PostMapping("/updateAccountDetails")
     public ResponseEntity<Object> updateDetails (

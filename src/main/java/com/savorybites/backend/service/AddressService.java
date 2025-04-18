@@ -47,6 +47,9 @@ public class AddressService {
                                        Object managedAccount)
     {
 
+        //this method is what transforms the data from the address DTO to the entity address
+
+        //we get the title from the addressDTO to the acctual entity
         address.setTitle(addressRegistrationBody.getTitle());
         // Set the Region
         address.setRegion(
@@ -105,7 +108,7 @@ public class AddressService {
             address.setLongitude(null);
         }
         address.setCoordinationActivated(addressRegistrationBody.isCoordinationActivated());
-
+        //Same goes for all this
     }
 
 
@@ -122,6 +125,9 @@ public class AddressService {
             // Link the address to the user
             addr.setUser(managedUser);
             // Save the new address
+            //then we save the entity to the repository aka the database
+            //In summ we use @RequestBody when you have alot of data that need to be passed to the backend
+            //
             addressRepository.save(addr);
             return true;
 

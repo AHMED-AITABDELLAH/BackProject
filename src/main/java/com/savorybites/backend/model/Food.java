@@ -43,6 +43,9 @@ public class Food {
     @Column(name="is_available")
     private Boolean isAvailable;
 
+    @Column(name="sold")
+    private long sold;
+
     @ManyToMany
     @JoinTable(name = "food_categories",
             joinColumns = @JoinColumn(name = "food_id"),
@@ -66,6 +69,7 @@ public class Food {
         if(isAvailable==null)
             isAvailable=true;
         discountedPrice =price-(price*discount)/100;
+        sold=0;
     }
 
 

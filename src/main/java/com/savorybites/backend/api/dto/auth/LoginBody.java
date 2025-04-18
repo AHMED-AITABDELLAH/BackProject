@@ -10,7 +10,8 @@ import lombok.Setter;
 @Getter
 
 
-public class LoginBody {
+public class LoginBody {//This is a DTO
+
 
     @NotNull
     @NotBlank

@@ -17,6 +17,7 @@ public class FoodDTO {
     private String image;
     private double discountedPrice;
     private RestaurantShortDTO restaurant;
+    private long sold;
     private List<String> categoryTitles;
 
     public FoodDTO(Food food) {
@@ -25,6 +26,7 @@ public class FoodDTO {
         this.image = food.getImage();
         this.discountedPrice = food.getDiscountedPrice();
         this.restaurant = new RestaurantShortDTO(food.getRestaurant());
+        this.sold= food.getSold();
         this.categoryTitles=new ArrayList<>();
         for(Category category:food.getCategories())
             categoryTitles.add(category.getTitle());

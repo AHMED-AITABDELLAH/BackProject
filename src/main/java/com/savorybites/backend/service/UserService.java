@@ -7,6 +7,7 @@ import com.savorybites.backend.exception.user.*;
 import com.savorybites.backend.model.LocalUser;
 import com.savorybites.backend.model.Restaurant;
 import com.savorybites.backend.model.Role;
+import com.savorybites.backend.model.Status;
 import com.savorybites.backend.model.verificationModels.PasswordResetToken;
 import com.savorybites.backend.model.verificationModels.VerificationToken;
 import com.savorybites.backend.repository.VerificationRepository.PasswordResetTokenRepository;
@@ -16,6 +17,7 @@ import com.savorybites.backend.repository.VerificationRepository.VerificationTok
 import jakarta.transaction.Transactional;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.web.firewall.RequestRejectedException;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
@@ -149,6 +151,7 @@ public class UserService {
                 //We check if the user is already verified
                 if(!user.getIsVerified()){
                     user.setIsVerified(true);
+                    user.setStatus(Status.VERIFIED);
                     userRepository.save(user);
                     verificationTokenRepository.deleteByUser(user);
                     return true;
@@ -158,6 +161,7 @@ public class UserService {
                 //We check if the user is already verified
                 if(!restaurant.getIsVerified()){
                     restaurant.setIsVerified(true);
+                    restaurant.setStatus(Status.VERIFIED);
                     restaurantRepository.save(restaurant);
                     verificationTokenRepository.deleteByRestaurant(restaurant);
                     return true;
@@ -173,13 +177,16 @@ public class UserService {
     /////////////////////////////////////////////LOGIN///////////////////////////////////////////
 
 
-    public String Login(LoginBody loginBody)
+    public String Login(LoginBody loginBody)//The logic for the login
+    //we  get the email passed by the loginbody
             throws BadCredentialsException, UserNotFoundException , UserNotVerified {
         Optional<LocalUser> userOp = userRepository.findByEmailIgnoreCase(loginBody.getEmail());
         //if the User exist
         if (userOp.isPresent()) {
             //store the user
             LocalUser user = userOp.get();
+            if(user.getStatus()==Status.BANNED)
+                throw new RequestRejectedException("The user is banned from the platform!");
             //verify the password
             if (encryptionService.verifyPassword(loginBody.getPassword(), user.getPassword())) {
                 //Verify if the user has verified his email

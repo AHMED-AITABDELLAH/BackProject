@@ -1,10 +1,15 @@
 package com.savorybites.backend.repository;
 
+import com.savorybites.backend.api.dto.food.FoodDTO;
 import com.savorybites.backend.model.Category;
 import com.savorybites.backend.model.Food;
 import com.savorybites.backend.model.Restaurant;
+import org.springframework.data.domain.Limit;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 
+import java.math.BigDecimal;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
@@ -37,4 +42,16 @@ public interface FoodRepository extends JpaRepository<Food, Long> {
     List<Food> findByCategories_Id(Long id);
 
     void deleteByIdAndRestaurant(Long id, Restaurant restaurant);
+
+    long countBySoldGreaterThan(long sold);
+
+
+    @Query("SELECT max(discountedPrice) FROM Food ORDER BY discountedPrice")
+    BigDecimal findMostExpensiveFoodPrice();
+    @Query("SELECT MIN(discountedPrice) FROM Food ORDER BY discountedPrice")
+    BigDecimal findLeastExpensiveFoodPrice();
+
+
+
+
 }

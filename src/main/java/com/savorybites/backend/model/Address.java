@@ -13,6 +13,7 @@ import lombok.Setter;
 @Entity
 @Table(name = "address")
 public class Address {
+    //this is the address entity
     @Id
     @JsonIgnore
     @GeneratedValue(strategy = GenerationType.IDENTITY)
