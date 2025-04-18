@@ -1,9 +1,14 @@
 package com.savorybites.backend.api.user;
 
 import com.savorybites.backend.api.dto.cart.CartItemDTO;
+import com.savorybites.backend.api.dto.food.FoodDTO;
 import com.savorybites.backend.model.CartItem;
+import com.savorybites.backend.model.Category;
+import com.savorybites.backend.model.Food;
 import com.savorybites.backend.model.LocalUser;
 import com.savorybites.backend.service.CartService;
+import com.savorybites.backend.service.CategoryService;
+import com.savorybites.backend.service.FoodService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -16,9 +21,10 @@ public class CartController {
 
 
     private final CartService cartService;
-
-    public CartController(CartService cartService) {
+    private final FoodService foodService;
+    public CartController(CartService cartService, FoodService foodService) {
         this.cartService = cartService;
+        this.foodService = foodService;
     }
 
 
@@ -64,6 +70,17 @@ public class CartController {
         return success
                 ? ResponseEntity.ok("Item decremented successfully .")
                 : ResponseEntity.notFound().build();
+
+    }
+
+    @GetMapping("/youMayAlsoLike")
+    public List<FoodDTO> getYouMayAlsoLikeFood(@AuthenticationPrincipal LocalUser user){
+
+        List<Long> categoriesID = cartService.getCategoriesIDsInCart(user);
+
+        List<Food> foodList=foodService.foodByCategoriesID(categoriesID);
+
+        return foodList.stream().map(FoodDTO::new).toList();
 
     }
 

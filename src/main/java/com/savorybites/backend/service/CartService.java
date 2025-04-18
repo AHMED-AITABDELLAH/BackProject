@@ -1,15 +1,13 @@
 package com.savorybites.backend.service;
 
-import com.savorybites.backend.model.Cart;
-import com.savorybites.backend.model.CartItem;
-import com.savorybites.backend.model.Food;
-import com.savorybites.backend.model.LocalUser;
+import com.savorybites.backend.model.*;
 import com.savorybites.backend.repository.CartItemRepository;
 import com.savorybites.backend.repository.CartRepository;
 import com.savorybites.backend.repository.FoodRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -135,6 +133,19 @@ public class CartService {
         return sum;
     }
 
+
+    public List<Long> getCategoriesIDsInCart(LocalUser user){
+
+        List<CartItem> cartItems = getCartContents(user);
+        List<Long> categoriesIDList = new ArrayList<>();
+        for(CartItem item : cartItems){
+            List<Category> itemCategories = item.getFood().getCategories();
+            for(Category category : itemCategories)
+                categoriesIDList.add(category.getId());
+
+        }
+        return categoriesIDList;
+    }
 
 
 

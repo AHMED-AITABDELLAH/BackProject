@@ -59,7 +59,7 @@ public class FoodService {
         return foodRepository.findByCategories_IdAndIsFlaggedIsFalse(categoryID);
     }
 
-    private List<Food> getFoodByCategories(List<Long> categoriesID){
+    public List<Food> getFoodByCategories(List<Long> categoriesID){
         List<Category> categoryList =categoryService.getCategoriesFromIDs(categoriesID);
         return foodRepository.findDistinctByCategoriesInAndIsAvailableIsTrueAndIsFlaggedIsFalse(categoryList);
     }
@@ -98,6 +98,17 @@ public class FoodService {
 
     }
 
+    public List<Food> getSimilarFood(long categoryID){
+        List<Food> foodList=foodByCategory(categoryID);
+        if (foodList.isEmpty())
+            return null;
+        Collections.shuffle(foodList);
+        return foodList
+                .stream()
+                .limit(4)
+                .collect(Collectors.toList());
+    }
+
     //List all the food of a specified restaurant
     public List<Food> restaurantFood(long id){
         List<Food> foodList=getFoodFromRestaurant(id);
@@ -116,14 +127,26 @@ public class FoodService {
         return foodList;
     }
 
-    //List all the food of some categories
-    public List<Food> foodByCategories(List<Long> categoriesID){
+    //List all the food of some categories using ids
+    public List<Food> foodByCategoriesID(List<Long> categoriesID){
         List<Food> foodList=getFoodByCategories(categoriesID);
         if(foodList.isEmpty())
             return null;//TODO ADD EXCEPTION
         Collections.shuffle(foodList);
         return foodList;
     }
+
+    //List all the food
+    public List<Food> Food(){
+        List<Food> foodList=getListOfFood();
+        if (foodList.isEmpty())
+            return null;//TODO ADD EXCEPTION
+        Collections.shuffle(foodList);
+        return foodList;
+    }
+
+
+
 
 
     /// //////////////////////////////////////For Food Manipulation Restaurant Exclusive //////////////////////////////////////

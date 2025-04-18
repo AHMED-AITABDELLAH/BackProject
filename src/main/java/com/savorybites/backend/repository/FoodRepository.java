@@ -57,4 +57,6 @@ public interface FoodRepository extends JpaRepository<Food, Long> {
 
 
     List<Food> findAllByStatus(FoodStatus status);
+
+    List<Food> findAllByCategories(List<Category> categories);
 }

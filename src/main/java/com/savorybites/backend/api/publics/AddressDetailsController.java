@@ -1,4 +1,4 @@
-package com.savorybites.backend.api.publics.addressDetails;
+package com.savorybites.backend.api.publics;
 
 import com.savorybites.backend.model.addressDetailModels.Commune;
 import com.savorybites.backend.model.addressDetailModels.Province;

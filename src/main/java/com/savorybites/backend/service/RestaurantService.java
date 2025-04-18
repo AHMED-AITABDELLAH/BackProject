@@ -16,9 +16,11 @@ import org.springframework.stereotype.Service;
 import com.savorybites.backend.api.dto.auth.RestaurantRegistrationBody;
 import com.savorybites.backend.model.Restaurant;
 import java.time.Instant;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class RestaurantService {
@@ -232,7 +234,19 @@ public class RestaurantService {
     }
 
     public List<Restaurant> getPopularRestaurants(){
-        return restaurantRepository.findAllByIsApprovedIsTrue();
+        List<Restaurant> restaurantList =restaurantRepository.findAllRestaurantsOrderBySales();
+        if (restaurantList.isEmpty())
+            return null;
+        Collections.shuffle(restaurantList);
+        return restaurantList
+                .stream()
+                .limit(5)
+                .collect(Collectors.toList());
+    }
+
+
+    public Restaurant getRestaurantProfile(long restaurantID){
+        return restaurantRepository.findRestaurantById(restaurantID).orElseThrow();
     }
 
 
