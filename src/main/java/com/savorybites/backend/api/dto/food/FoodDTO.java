@@ -14,7 +14,9 @@ import java.util.List;
 public class FoodDTO {
     private Long id;
     private String title;
+    private int sold;
     private String image;
+    private int discount;
     private double discountedPrice;
     private RestaurantShortDTO restaurant;
     private List<String> categoryTitles;
@@ -23,6 +25,8 @@ public class FoodDTO {
         this.id = food.getId();
         this.title = food.getTitle();
         this.image = food.getImage();
+        this.sold=food.getSold();
+        this.discount= food.getDiscount();
         this.discountedPrice = food.getDiscountedPrice();
         this.restaurant = new RestaurantShortDTO(food.getRestaurant());
         this.categoryTitles=new ArrayList<>();
