@@ -1,11 +1,8 @@
 package com.savorybites.backend.repository;
 
-import com.savorybites.backend.api.dto.food.FoodDTO;
 import com.savorybites.backend.model.Category;
 import com.savorybites.backend.model.Food;
 import com.savorybites.backend.model.Restaurant;
-import org.springframework.data.domain.Limit;
-import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 

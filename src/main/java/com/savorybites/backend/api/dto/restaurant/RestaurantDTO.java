@@ -1,6 +1,5 @@
 package com.savorybites.backend.api.dto.restaurant;
 
-import com.savorybites.backend.api.dto.address.AddressRegistrationBody;
 import com.savorybites.backend.api.dto.address.AddressShortDTO;
 import com.savorybites.backend.model.Restaurant;
 import lombok.Getter;

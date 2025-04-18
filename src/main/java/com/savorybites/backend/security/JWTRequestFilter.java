@@ -13,7 +13,6 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.springframework.core.annotation.MergedAnnotation;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -34,7 +33,7 @@ public class JWTRequestFilter extends OncePerRequestFilter {
     private final BlacklistedTokenService blacklistedTokenService;
     private final RestaurantRepository restaurantRepository;
 
-    public JWTRequestFilter(JWTService jwtService, UserRepository userRepository, BlacklistedTokenRepository blacklistedTokenRepository, AdminRepository adminRepository, BlacklistedTokenService blacklistedTokenService, RestaurantRepository restaurantRepository) {
+    public JWTRequestFilter(JWTService jwtService, UserRepository userRepository,AdminRepository adminRepository, BlacklistedTokenService blacklistedTokenService, RestaurantRepository restaurantRepository) {
         this.jwtService = jwtService;
         this.userRepository = userRepository;
         this.adminRepository = adminRepository;

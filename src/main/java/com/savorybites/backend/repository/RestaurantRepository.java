@@ -1,6 +1,5 @@
 package com.savorybites.backend.repository;
 
-import com.savorybites.backend.model.Food;
 import com.savorybites.backend.model.Restaurant;
 import com.savorybites.backend.model.Status;
 import org.springframework.data.jpa.repository.JpaRepository;

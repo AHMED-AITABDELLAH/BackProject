@@ -17,7 +17,7 @@ public class AuthUserController {
 
     private final UserService userService;
 
-    public AuthUserController(UserService userService, PasswordResetTokenService passwordResetTokenService) {
+    public AuthUserController(UserService userService) {
         this.userService = userService;
     }
 

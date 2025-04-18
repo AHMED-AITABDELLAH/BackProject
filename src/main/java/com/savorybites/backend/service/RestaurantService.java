@@ -10,7 +10,6 @@ import com.savorybites.backend.model.verificationModels.PasswordResetToken;
 import com.savorybites.backend.model.verificationModels.VerificationToken;
 import com.savorybites.backend.repository.RestaurantRepository;
 import com.savorybites.backend.repository.VerificationRepository.VerificationTokenRepository;
-import jakarta.transaction.Transactional;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.web.firewall.RequestRejectedException;
 import org.springframework.stereotype.Service;
