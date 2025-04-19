@@ -1,10 +1,12 @@
 package com.savorybites.backend.service;
 
+import com.savorybites.backend.api.dto.Order.OrderDTO;
 import com.savorybites.backend.model.*;
 import com.savorybites.backend.repository.CartItemRepository;
 import com.savorybites.backend.repository.OrderItemRepository;
 import com.savorybites.backend.repository.OrdersRepository;
 import jakarta.transaction.Transactional;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -24,17 +26,18 @@ public class OrdersService {
     private final AddressService addressService;
     private final OrderItemRepository orderItemRepository;
     private final UserService userService;
-
+    private final SimpMessagingTemplate messagingTemplate;
     public OrdersService(CartService cartService,
                          OrdersRepository ordersRepository,
                          CartItemRepository cartItemRepository,
-                         AddressService addressService, OrderItemRepository orderItemRepository, UserService userService) {
+                         AddressService addressService, OrderItemRepository orderItemRepository, UserService userService, SimpMessagingTemplate messagingTemplate) {
         this.cartService = cartService;
         this.ordersRepository = ordersRepository;
         this.cartItemRepository = cartItemRepository;
         this.addressService = addressService;
         this.orderItemRepository = orderItemRepository;
         this.userService = userService;
+        this.messagingTemplate = messagingTemplate;
     }
 
     @Transactional
@@ -95,6 +98,16 @@ public class OrdersService {
 
         // Clear cart
         cartItemRepository.deleteAll(cartItemList);
+
+        for (Orders order : placedOrders) {
+            Long restaurantId = order.getRestaurant().getId();
+            // You might want to customize the payload (full order, DTO, just IDs, etc)
+            messagingTemplate.convertAndSend(
+                    "/topic/restaurant/" + restaurantId + "/orders",
+                    "New Order has arrived (ID:)"+order.getId() // or create an OrderNotification DTO if you like
+            );
+        }
+
         return placedOrders;
     }
 
