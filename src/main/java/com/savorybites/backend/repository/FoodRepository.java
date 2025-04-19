@@ -29,7 +29,7 @@ public interface FoodRepository extends JpaRepository<Food, Long> {
 
     //this to show all the food that is popular
     //TODO add IsFlagged false
-    List<Food> findByIsAvailableTrueOrderBySoldDesc();
+    List<Food> findByIsAvailableTrueAndIsFlaggedFalseOrderBySoldDesc();
 
 
 
@@ -59,4 +59,7 @@ public interface FoodRepository extends JpaRepository<Food, Long> {
     List<Food> findAllByStatus(FoodStatus status);
 
     List<Food> findAllByCategories(List<Category> categories);
+
+    long countByIsFlaggedTrue();
+
 }

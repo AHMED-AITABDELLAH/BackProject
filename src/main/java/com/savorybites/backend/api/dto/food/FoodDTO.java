@@ -3,6 +3,7 @@ package com.savorybites.backend.api.dto.food;
 import com.savorybites.backend.api.dto.restaurant.RestaurantShortDTO;
 import com.savorybites.backend.model.Category;
 import com.savorybites.backend.model.Food;
+import com.savorybites.backend.model.FoodStatus;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -20,6 +21,8 @@ public class FoodDTO {
     private RestaurantShortDTO restaurant;
     private long sold;
     private List<String> categoryTitles;
+    private FoodStatus status;
+
 
     public FoodDTO(Food food) {
         this.id = food.getId();
@@ -29,6 +32,7 @@ public class FoodDTO {
         this.discountedPrice = food.getDiscountedPrice();
         this.restaurant = new RestaurantShortDTO(food.getRestaurant());
         this.sold= food.getSold();
+        this.status=food.getStatus();
         this.categoryTitles=new ArrayList<>();
         for(Category category:food.getCategories())
             categoryTitles.add(category.getTitle());

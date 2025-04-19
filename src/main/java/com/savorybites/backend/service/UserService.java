@@ -72,8 +72,11 @@ public class UserService {
         newUser.setUsername(userRegistrationBody.getUsername());
         newUser.setEmail(userRegistrationBody.getEmail());
         newUser.setIsVerified(false);
+        newUser.setStatus(Status.UNVERIFIED);
+
         //Encrypting the password before storing it
         newUser.setPassword(encryptionService.encryptPassword(userRegistrationBody.getPassword()));
+
         //Here we delete old verification token
         verificationTokenRepository.deleteByExpiryDateBefore(Instant.now());
         //here we send a verification email to the user to confirm it
@@ -86,7 +89,7 @@ public class UserService {
         cartService.createCart(newUser);
         verificationTokenRepository.save(verificationToken);
     }
-    /// //////////Generating  verification JWT upon Registering/Login////////////////////////
+    /// //////////Generating verification JWT upon Registering/Login////////////////////////
     private VerificationToken createVerificationToken(LocalUser user){
         VerificationToken verificationToken = new VerificationToken();
         verificationToken.setToken(jwtService.generateVerificationJWT(user));
@@ -120,6 +123,9 @@ public class UserService {
 
         LocalUser user = userRepository.findByEmailIgnoreCase(email)
                 .orElseThrow(UserNotFoundException::new); // Throw if user doesn't exist
+
+        if(user.getStatus()==Status.BANNED)
+            throw new RequestRejectedException("The user is banned from the platform!");
 
         if (!user.getIsVerified()) {
             throw new UserNotVerified(); // Ensure user is verified
@@ -178,10 +184,10 @@ public class UserService {
 
 
     public String Login(LoginBody loginBody)//The logic for the login
-    //we  get the email passed by the loginbody
+    //we get the email passed by the login body
             throws BadCredentialsException, UserNotFoundException , UserNotVerified {
         Optional<LocalUser> userOp = userRepository.findByEmailIgnoreCase(loginBody.getEmail());
-        //if the User exist
+        //if the User exists
         if (userOp.isPresent()) {
             //store the user
             LocalUser user = userOp.get();

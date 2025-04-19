@@ -14,7 +14,12 @@ public interface RestaurantRepository extends JpaRepository<Restaurant, Long> {
 
     Optional<Restaurant> findRestaurantById(Long id);
 
-    List<Restaurant> findAllByIsApprovedIsTrue();
+    @Query(value = "SELECT * " +
+            "FROM restaurant r " +
+            "WHERE r.IS_VERIFIED=1 " +
+            "AND r.STATUS = 'VERIFIED'"
+            ,nativeQuery = true)
+    List<Restaurant> findAllAvailableRestaurants();
 
     List<Restaurant> findAllByStatus(Status status);
 

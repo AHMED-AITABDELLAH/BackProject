@@ -153,9 +153,6 @@ public class AdminService {
         restaurant.setStatus(Status.BANNED);
         restaurantRepository.save(restaurant);
 
-        // Now generate verification token and send email
-
-        emailService.sendAccountIsNotApproved(restaurant);
         return ResponseEntity.ok("The Restaurant has been banned.");
 
 
@@ -216,7 +213,11 @@ public class AdminService {
             foodRepository.save(flageFood);
             return ResponseEntity.ok("The food is flagged successfully.");
         }else{
-            flageFood.setStatus(FoodStatus.AVAILABLE);
+            if(flageFood.getIsAvailable())
+                flageFood.setStatus(FoodStatus.AVAILABLE);
+            else
+                flageFood.setStatus(FoodStatus.UNAVAILABLE);
+
             foodRepository.save(flageFood);
             return ResponseEntity.ok("The food is unflagged successfully.");
         }
@@ -301,6 +302,8 @@ public class AdminService {
     private FoodStatistics getFoodStatistics(){
         FoodStatistics foodStatistics = new FoodStatistics();
         foodStatistics.setTotalFoodCount(foodRepository.count());
+        foodStatistics.setTotalFlaggedFood(foodRepository.countByIsFlaggedTrue());
+        foodStatistics.setTotalUnflaggedFood();
         foodStatistics.setMostExpensiveFoodPrice(foodRepository.findMostExpensiveFoodPrice());
         foodStatistics.setLeastExpensiveFoodPrice(foodRepository.findLeastExpensiveFoodPrice());
         return foodStatistics;

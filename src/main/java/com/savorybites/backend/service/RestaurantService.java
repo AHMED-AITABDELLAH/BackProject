@@ -230,7 +230,7 @@ public class RestaurantService {
 
 
     public List<Restaurant> getRestaurants(){
-        return restaurantRepository.findAllByIsApprovedIsTrue();
+        return restaurantRepository.findAllAvailableRestaurants();
     }
 
     public List<Restaurant> getPopularRestaurants(){

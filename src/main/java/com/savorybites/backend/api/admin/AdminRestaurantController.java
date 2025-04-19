@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/admin/restaurant")
+@RequestMapping("/admin/restaurants")
 public class AdminRestaurantController {
 
     private final AdminService adminService;
@@ -22,21 +22,21 @@ public class AdminRestaurantController {
         this.adminService = adminService;
     }
 
-    @PutMapping("/{restaurantID}/approveRestaurants")
+    @PutMapping("/{restaurantID}/approve")
     @Transactional
     public ResponseEntity<?> approveRestaurant(@AuthenticationPrincipal Admin admin,
                                                @PathVariable Long restaurantID) {
         return adminService.approveRestaurant(admin,restaurantID);
     }
 
-    @PutMapping("/{restaurantID}/declineRestaurants/")
+    @PutMapping("/{restaurantID}/decline")
     @Transactional
     public ResponseEntity<?> declineRestaurant(@AuthenticationPrincipal Admin admin,
                                                @PathVariable Long restaurantID) {
         return adminService.declineRestaurant(admin,restaurantID);
     }
 
-    @PutMapping("/{restaurantID}/banRestaurants")
+    @PutMapping("/{restaurantID}/ban")
     @Transactional
     public ResponseEntity<?> banRestaurant(@AuthenticationPrincipal Admin admin,
                                            @PathVariable Long restaurantID) {

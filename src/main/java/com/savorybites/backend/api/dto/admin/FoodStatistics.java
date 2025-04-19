@@ -16,9 +16,15 @@ import java.util.List;
 public class FoodStatistics {
 
     private long totalFoodCount;
+    private long totalUnflaggedFood;
+    private long totalFlaggedFood;
     private BigDecimal mostExpensiveFoodPrice;
     private BigDecimal leastExpensiveFoodPrice;
     private List<FoodDTO> topSellingFoods;
+
+    public void setTotalUnflaggedFood(){
+        totalUnflaggedFood=totalFoodCount-totalFlaggedFood;
+    }
 
 
 }

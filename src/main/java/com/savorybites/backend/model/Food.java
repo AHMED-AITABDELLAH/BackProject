@@ -46,7 +46,9 @@ public class Food {
     @Column(name="is_flagged")
     private Boolean isFlagged;
 
+
     @Column(name="status")
+    @Enumerated(EnumType.STRING)
     private FoodStatus status;
 
     @Column(name="sold")

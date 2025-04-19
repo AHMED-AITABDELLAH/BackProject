@@ -52,12 +52,25 @@ public class PublicController {
                 .collect(Collectors.toList());
     }
 
+    @GetMapping("/allCategories")
+    public List<Category> getAllCategories(){
+        List<Category> categoryList = categoryService.getCategories();
+        Collections.shuffle(categoryList);
+        return categoryList;
+    }
+
     @GetMapping("/popularRestaurant")
     public List<RestaurantShortDTO> getPopularRestaurant(){
         List<Restaurant> restaurantList = restaurantService.getPopularRestaurants();
         return restaurantList.stream().map(RestaurantShortDTO::new).toList();
     }
 
+    @GetMapping("/menu")
+    public List<FoodDTO> getMenu(){
+        List<Food> foodList = foodService.Food();
+        Collections.shuffle(foodList);
+        return foodList.stream().map(FoodDTO::new).toList();
+    }
 
     @GetMapping("/similarProducts")
     public List<FoodDTO> getSimilarFood(@RequestParam(required = false) Long categoryID){
@@ -70,20 +83,27 @@ public class PublicController {
         return foodList.stream().map(FoodDTO::new).toList();
     }
 
-    @GetMapping("/{restaurantId}")
+    @GetMapping("/restaurants")
+    public List<RestaurantDTO> getRestaurants(){
+        List<Restaurant>  restaurantList = restaurantService.getRestaurants();
+        return restaurantList.stream().map(RestaurantDTO::new).toList();
+    }
+
+
+    @GetMapping("/restaurants/{restaurantId}")
     public RestaurantDTO getRestaurantDetails(@PathVariable long restaurantId){
          Restaurant restaurant= restaurantService.getRestaurantProfile(restaurantId);
         return new RestaurantDTO(restaurant);
     }
 
-    @GetMapping("/{restaurantId}/allFood")
+    @GetMapping("/restaurants/{restaurantId}/allFood")
     public List<FoodDTO> getAllRestaurantFood(@PathVariable long restaurantId){
         List<Food> foodList = foodService.restaurantFood(restaurantId);
         Collections.shuffle(foodList);
         return foodList.stream().map(FoodDTO::new).toList();
     }
 
-    @GetMapping("/{restaurantId}/food")//just 4 food Items to be displayed with the short profile
+    @GetMapping("/restaurants/{restaurantId}/food")//just 4 food Items to be displayed with the short profile
     public List<FoodDTO> getSomeRestaurantFood(@PathVariable long restaurantId){
         List<Food> foodList = foodService.restaurantFood(restaurantId);
         Collections.shuffle(foodList);

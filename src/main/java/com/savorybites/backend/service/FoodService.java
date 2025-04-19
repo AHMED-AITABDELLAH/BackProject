@@ -47,7 +47,7 @@ public class FoodService {
     }
 
     private List<Food> getListOfPopularFood(){
-        return foodRepository.findByIsAvailableTrueOrderBySoldDesc();
+        return foodRepository.findByIsAvailableTrueAndIsFlaggedFalseOrderBySoldDesc();
     }
 
 

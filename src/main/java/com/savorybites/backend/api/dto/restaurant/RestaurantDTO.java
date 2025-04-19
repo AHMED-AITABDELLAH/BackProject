@@ -2,6 +2,7 @@ package com.savorybites.backend.api.dto.restaurant;
 
 import com.savorybites.backend.api.dto.address.AddressShortDTO;
 import com.savorybites.backend.model.Restaurant;
+import com.savorybites.backend.model.Status;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -17,6 +18,7 @@ public class RestaurantDTO {
     private String contactEmail;
     private String profileImg;
     private String profileBanner;
+    private Status status;
 
 
     public RestaurantDTO(Restaurant restaurant){
@@ -27,6 +29,7 @@ public class RestaurantDTO {
         this.contactEmail= restaurant.getContactEmail();
         this.shippingFees = restaurant.getShippingFees();
         this.profileImg = restaurant.getProfileImg();
+        this.status = restaurant.getStatus();
         this.profileBanner = restaurant.getProfileBanner();
 
     }
