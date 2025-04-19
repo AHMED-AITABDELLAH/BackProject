@@ -56,6 +56,7 @@ public class UserService {
     }
 
     /// ////////////////////////////////////////////SignUP-Registration//////////////////////////////////////
+    @Transactional
     public void Registration(UserRegistrationBody userRegistrationBody)
             throws UserAlreadyExistsException {
 
