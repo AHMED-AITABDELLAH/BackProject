@@ -26,10 +26,11 @@ public class OrderController {
     }
 
     @PostMapping("/placeOrders")
-    public List<OrderDTO> placeOrders(@AuthenticationPrincipal LocalUser user){
-        List<Orders> ordersList = ordersService.createOrdersFromCart(user);
-        return ordersList.stream().map(OrderDTO::new).toList();
+    public ResponseEntity<String> placeOrders(@AuthenticationPrincipal LocalUser user){
+         return ordersService.createOrdersFromCart(user);
     }
+
+
 
     @GetMapping("/placedOrders")
     public List<OrderDTO> placedOrders(@AuthenticationPrincipal LocalUser user){
@@ -37,14 +38,23 @@ public class OrderController {
         return ordersList.stream().map(OrderDTO::new).toList();
     }
 
-    @GetMapping("/{orderID}/OrderItems")
-    public List<OrderItemDTO> OrderItems(@AuthenticationPrincipal LocalUser user,
+    @PutMapping("/placedOrders/{orderID}/checkout")
+    public ResponseEntity<String> continueCheckout(@AuthenticationPrincipal LocalUser user,
+                                                   @PathVariable long orderID,
+                                                   @RequestParam long addressID)
+                                                   //TODO PAYMENT ID
+    {
+        return ordersService.continueCheckout(user,addressID,orderID);
+    }
+
+    @GetMapping("/placedOrders/{orderID}/orderItems")
+    public List<OrderItemDTO> orderItems(@AuthenticationPrincipal LocalUser user,
                                          @PathVariable long orderID){
         List<OrderItem> orderItemList = ordersService.getOrderItems(user,orderID);
         return orderItemList.stream().map(OrderItemDTO::new).toList();
     }
 
-    @PutMapping("/{orderID}/cancel")
+    @PutMapping("/placedOrders/{orderID}/cancel")
     public ResponseEntity<Object> cancelOrder(@AuthenticationPrincipal LocalUser user,
                                               @PathVariable long orderID){
         boolean success= ordersService.cancelOrder(user, orderID);

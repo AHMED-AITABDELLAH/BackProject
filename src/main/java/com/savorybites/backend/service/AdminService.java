@@ -86,7 +86,6 @@ public class AdminService {
     }
 
 
-
     /// /////////Restaurant Logic
 
     public Restaurant getRestaurant(Admin admin, long restaurantID){
@@ -174,7 +173,6 @@ public class AdminService {
 
     }
 
-
     public List<Restaurant> getRestaurantByStatus(Admin admin,Status status){
         Admin theAdmin=verifyAdmin(admin);
         return restaurantRepository.findAllByStatus(status);
@@ -184,7 +182,6 @@ public class AdminService {
         Admin theAdmin=verifyAdmin(admin);
         return restaurantRepository.findAll();
     }
-
 
     /// ///////Food Logic
 
@@ -223,8 +220,6 @@ public class AdminService {
         }
 
     }
-
-
 
     /// ////////Users Logic
 
@@ -276,9 +271,8 @@ public class AdminService {
 
     }
 
-
-
     /// ///////Orders Logic
+
     public List<Orders> getAllOrders(Admin admin){
         Admin theAdmin = verifyAdmin(admin);
         return ordersRepository.findAll();
@@ -294,10 +288,7 @@ public class AdminService {
         return ordersRepository.findAllByStatus(orderStatus);
     }
 
-
-
     /// ////Dashboard Statistics
-
 
     private FoodStatistics getFoodStatistics(){
         FoodStatistics foodStatistics = new FoodStatistics();
@@ -349,7 +340,6 @@ public class AdminService {
                 .toList();
     }
 
-
     private RevenueStatistics getRevenueStatistics(){
         RevenueStatistics revenueStatistics = new RevenueStatistics();
         revenueStatistics.setTotalRevenue(ordersRepository.findTotalRevenue());
@@ -357,14 +347,12 @@ public class AdminService {
         return revenueStatistics;
     }
 
-
     private OrderStatistics getOrderStatistics(){
         OrderStatistics orderStatistics = new OrderStatistics();
         orderStatistics.setTotalOrderCount(ordersRepository.count());
         orderStatistics.setWeeklyOrderStats(getWeeklyOrderStats());
         return orderStatistics;
     }
-
 
     public DashboardStatistics getDashboardStats(Admin admin) {
         Admin theAdmin = verifyAdmin(admin);

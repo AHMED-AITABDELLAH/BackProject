@@ -204,13 +204,13 @@ public class AddressService {
     {
         Optional<Address> optionalAddress = addressRepository
                     .findByUserAndId(user,addressID);
-        return optionalAddress.orElse(null);
+        return optionalAddress.orElseThrow(()-> new EntityNotFoundException("No such Address!"));
     }
 
     public Address getDefaultAddress(LocalUser user){
         Optional<Address> optionalAddress = addressRepository
                 .findByUserAndIsDefaultTrue(user);
-        return optionalAddress.orElse(null);
+        return optionalAddress.orElseThrow(()-> new EntityNotFoundException("No such Address!"));
     }
 
 

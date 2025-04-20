@@ -1,8 +1,8 @@
 package com.savorybites.backend.model;
 
 public enum OrderStatus {
-    PENDING,
-    CONFIRMED,
+    UNCOMPLETED,
+    COMPLETED,
     PREPARING,
     OUT_FOR_DELIVERY,
     DELIVERED,

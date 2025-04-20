@@ -40,12 +40,18 @@ public class SecurityConfig {
                         .requestMatchers
                                 (
                                         "/public/**",
-                                        "/auth/**"
+                                        "/auth/**",
+                                        "/websocket",
+                                        "/websocket/**",
+                                        "/swagger-ui.html",
+                                        "/swagger-ui/**",
+                                        "/v3/api-docs",
+                                        "/v3/api-docs/**"
                                 ).permitAll()
                         .requestMatchers("/user/**").hasRole("USER")
                         .requestMatchers("/admin/**").hasRole("ADMIN")
                         .requestMatchers("/restaurant/**").hasRole("RESTAURANT")
-                        .anyRequest().authenticated() // Allow all requests without authentication
+                        .anyRequest().authenticated() // Allow all requests with authentication
                 )
                 .addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class)
                 .logout(logout -> logout
@@ -59,10 +65,10 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOrigins(List.of(frontendURL)); // Your frontend origin
+        config.setAllowedOrigins(List.of(frontendURL,"http://localhost:63342")); // Your frontend origin
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
-        config.setAllowCredentials(false); //No cookies/session involved(using jwt)
+        config.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);
