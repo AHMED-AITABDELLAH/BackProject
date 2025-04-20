@@ -15,7 +15,6 @@ import lombok.Setter;
 public class Address {
     //this is the address entity
     @Id
-    @JsonIgnore
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "address_id", nullable = false)
     private Long id;

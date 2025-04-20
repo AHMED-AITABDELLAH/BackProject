@@ -34,7 +34,10 @@ public class OrderDTO {
         for(OrderItem orderItem :order.getItems())
             items.add(new OrderItemDTO(orderItem));
 
-        this.deliveryAddress = new AddressShortDTO(order.getDeliveryAddress());
+        if(order.getDeliveryAddress()!=null)
+            this.deliveryAddress = new AddressShortDTO(order.getDeliveryAddress());
+        else
+            this.deliveryAddress=null;
 
         this.orderDate = order.getOrderDate();
         this.totalPrice = order.getTotalPrice();

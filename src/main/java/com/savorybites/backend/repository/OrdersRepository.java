@@ -3,8 +3,10 @@ package com.savorybites.backend.repository;
 import com.savorybites.backend.model.LocalUser;
 import com.savorybites.backend.model.OrderStatus;
 import com.savorybites.backend.model.Orders;
+import com.savorybites.backend.model.Restaurant;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -46,5 +48,17 @@ public interface OrdersRepository extends JpaRepository<Orders, Long> {
    """, nativeQuery = true)
     BigDecimal findTotalRevenue();
 
+
+    @Query(value =
+            "SELECT * " +
+                    "FROM orders " +
+                    "WHERE restaurant_id = :restaurantId " +
+                    "AND status <> 'UNCOMPLETED'",
+            nativeQuery = true)
+    List<Orders> findAllCompletedOrdersByRestaurant(@Param("restaurantId") Long restaurantId);
+
+
     List<Orders> findAllByStatus(OrderStatus status);
+
+    List<Orders> findAllByStatusAndRestaurant(OrderStatus status, Restaurant restaurant);
 }

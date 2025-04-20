@@ -1,19 +1,19 @@
 package com.savorybites.backend.service;
 
-import com.savorybites.backend.api.dto.Order.OrderDTO;
 import com.savorybites.backend.model.*;
 import com.savorybites.backend.repository.CartItemRepository;
 import com.savorybites.backend.repository.OrderItemRepository;
 import com.savorybites.backend.repository.OrdersRepository;
 import jakarta.transaction.Transactional;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -40,17 +40,18 @@ public class OrdersService {
         this.messagingTemplate = messagingTemplate;
     }
 
+
+    /*User Exclusive*/
+
     @Transactional
-    public List<Orders> createOrdersFromCart(LocalUser user)
-    {
+    public ResponseEntity<String> createOrdersFromCart(LocalUser user) {
 
         //Getting the cart associated with the user
         Cart cart= cartService.getManagedCart(user);
         //Getting the cartItems associated with the cart
         List<CartItem> cartItemList=cartItemRepository.findAllByCart(cart);
         if(cartItemList.isEmpty())
-            throw new RuntimeException("The cart is empty!");
-
+            return ResponseEntity.status(HttpStatus.NO_CONTENT).body("Cart is empty");
 
         //Group the cartItems by the restaurant and stores them in a map with the key is a restaurant
         Map<Restaurant, List<CartItem>> grouped = cartItemList.stream()
@@ -70,8 +71,7 @@ public class OrdersService {
             orders.setUser(user);
             orders.setRestaurant(restaurant);
             orders.setOrderDate(LocalDateTime.now());
-            orders.setDeliveryAddress(addressService.getDefaultAddress(user)); // adapt this
-            orders.setStatus(OrderStatus.PENDING);
+            orders.setStatus(OrderStatus.UNCOMPLETED);
 
             List<OrderItem> orderItems = new ArrayList<>();
             double total = 0;
@@ -92,25 +92,52 @@ public class OrdersService {
             placedOrders.add(orders);
         }
 
-
         // Save all orders (cascade saves OrderItems)
         ordersRepository.saveAll(placedOrders);
 
         // Clear cart
         cartItemRepository.deleteAll(cartItemList);
 
-        for (Orders order : placedOrders) {
+
+        //Alert the user that he has orders to complete
+        messagingTemplate.convertAndSend(
+                "/topic/user/" + user.getId() + "/orders",
+                "Your orders have been created." +
+                        "\nPlease proceed to checkout to complete your purchases."
+        );
+
+        return ResponseEntity.ok().build();
+    }
+
+    public ResponseEntity<String> continueCheckout(LocalUser user,long addressID,long orderID) {
+
+            Orders order = ordersRepository.findById(orderID)
+                    .orElseThrow(() -> new IllegalArgumentException("Order not found"));
+
+            // Ensure the order belongs to the user and is in the right status
+            if (
+                    !Objects.equals(order.getUser().getId(), user.getId())
+                            ||
+                    !order.getStatus().equals(OrderStatus.UNCOMPLETED)
+            )
+                throw new SecurityException("Order not accessible for checkout");
+
+            // Assign address and payment method
+            order.setDeliveryAddress(addressService.getAddress(user,addressID));
+            //TODO PAYMENT
+
+            order.setStatus(OrderStatus.COMPLETED);
+
+            ordersRepository.save(order);
+
+            //Send Notification to the restaurant
             Long restaurantId = order.getRestaurant().getId();
             // You might want to customize the payload (full order, DTO, just IDs, etc)
             messagingTemplate.convertAndSend(
                     "/topic/restaurant/" + restaurantId + "/orders",
-                    "New Order has arrived (ID:)"+order.getId() // or create an OrderNotification DTO if you like
-            );
+                    "New Order has arrived (ID : "+order.getId()+")");
+            return ResponseEntity.ok("Your Order is completed successfully.");
         }
-
-        return placedOrders;
-    }
-
 
     public List<Orders> getPlacedOrders(LocalUser user){
         List<Orders> ordersList = ordersRepository.findAllByUser(userService.getManagedUser(user));
@@ -130,11 +157,12 @@ public class OrdersService {
     @Transactional
     public boolean cancelOrder(LocalUser user,long orderID){
         Orders order=getManagedOrder(user,orderID);
-        if(order.getStatus()==OrderStatus.DELIVERED || order.getStatus()==OrderStatus.CANCELLED)
-            return false;
-        order.setStatus(OrderStatus.CANCELLED);
-        //TODO TREATING THE REFUND
-        return true;
+        if(order.getStatus()==OrderStatus.UNCOMPLETED || order.getStatus()==OrderStatus.COMPLETED) {
+            order.setStatus(OrderStatus.CANCELLED);
+            //TODO TREATING THE REFUND
+            return true;
+        }
+        return false;
     }
 
     private Orders getManagedOrder(LocalUser user,long orderID){
@@ -143,6 +171,19 @@ public class OrdersService {
             throw new RuntimeException("Something went wrong");
         return optionalOrder.get();
     }
+
+    /*Restaurant Exclusive*/
+
+
+    public List<Orders> getRestaurantOrderHistory(Restaurant restaurant) {
+        return ordersRepository.findAllCompletedOrdersByRestaurant(restaurant.getId());
+    }
+
+    public List<Orders> getAllOrdersByStatusAndRestaurant(Restaurant restaurant,OrderStatus status){
+        return ordersRepository.findAllByStatusAndRestaurant(status,restaurant);
+    }
+
+
 
 
 }

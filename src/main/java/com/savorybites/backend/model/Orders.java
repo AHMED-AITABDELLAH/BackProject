@@ -29,8 +29,8 @@ public class Orders {
     @OneToMany(mappedBy = "orders", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<OrderItem> items = new ArrayList<>();
 
-    @ManyToOne(optional = false)
-    @JoinColumn(name = "address_id", nullable = false)
+    @ManyToOne
+    @JoinColumn(name = "address_id")
     private Address deliveryAddress;
 
     @Column(name = "order_date", nullable = false)
@@ -46,9 +46,12 @@ public class Orders {
     @Column(name = "payment_date")
     private LocalDateTime paymentDate;
 
+    //TODO ADD PAYMENT METHOD
+
+
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
-    private OrderStatus status = OrderStatus.PENDING;
+    private OrderStatus status = OrderStatus.UNCOMPLETED;
 
 
 
