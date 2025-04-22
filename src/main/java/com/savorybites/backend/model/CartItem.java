@@ -35,6 +35,10 @@ public class CartItem {
         quantity+=1;
     }
 
+    public void increment(Integer qte){
+        quantity+=qte;
+    }
+
     public void decrement(){
         if(quantity-1<=0)
             quantity=0;

@@ -39,10 +39,11 @@ public class CartService {
     }
 
 
-    private CartItem addToCart(Cart cart,Food food){
+    private CartItem addToCart(Cart cart,Food food,Integer qte){
             CartItem item=new CartItem();
             item.setFood(food);
             item.setCart(cart);
+            item.setQuantity(qte);
             return item;
     }
 
@@ -95,7 +96,9 @@ public class CartService {
     }
 
     @Transactional
-    public boolean addOrIncrementItemInCart(LocalUser user,long foodID){
+    public boolean addOrIncrementItemInCart(LocalUser user,long foodID,Integer qte){
+        if(qte==null)
+            qte=1;
         Optional<Food> opFood=foodRepository.findById(foodID);
         Cart managedCart = getManagedCart(user);
         if(managedCart==null)
@@ -106,9 +109,9 @@ public class CartService {
             Optional<CartItem> opItem = cartItemRepository.findByCartAndFood(managedCart, food);
             if(opItem.isPresent()){
                 item = opItem.get();
-                item.increment();
+                item.increment(qte);
             }else
-                item=addToCart(managedCart,food);
+                item=addToCart(managedCart,food,qte);
             cartItemRepository.save(item);
             return true;
         }

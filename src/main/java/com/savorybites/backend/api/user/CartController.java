@@ -36,8 +36,9 @@ public class CartController {
 
     @PostMapping("/addItem")
     public ResponseEntity<Object> addToCart(@AuthenticationPrincipal LocalUser user,
-                                            @RequestParam long foodID){
-        boolean success=cartService.addOrIncrementItemInCart(user, foodID);
+                                            @RequestParam long foodID,
+                                            @RequestParam(required = false) Integer qte){
+        boolean success=cartService.addOrIncrementItemInCart(user, foodID,qte);
         return success
                 ? ResponseEntity.ok("Item added successfully to your cart.")
                 : ResponseEntity.notFound().build();
