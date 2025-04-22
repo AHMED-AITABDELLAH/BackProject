@@ -251,16 +251,7 @@ public class FoodService {
     }
 
 
-
-
-
-
-
-
-
-
-
-    
-
-
+    public Food getFoodByID(long foodID) {
+        return foodRepository.findById(foodID).orElseThrow();
+    }
 }

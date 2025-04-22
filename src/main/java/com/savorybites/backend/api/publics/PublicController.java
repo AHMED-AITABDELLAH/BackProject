@@ -30,6 +30,11 @@ public class PublicController {
         this.restaurantService = restaurantService;
     }
 
+    @GetMapping("/menu/{foodID}")
+    public FoodDTO getFoodProfile(@PathVariable long foodID){
+        return new FoodDTO(foodService.getFoodByID(foodID));
+    }
+
     @GetMapping("/onSaleFood")
     public List<FoodDTO> getOnSaleFood(){
         List<Food> foodList = foodService.OnSaleSection(5);
