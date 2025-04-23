@@ -21,6 +21,6 @@ public class AddressShortDTO {
         this.title= address.getTitle();
         this.region=address.getRegion().getRegionName();
         this.province=address.getProvince().getProvinceName();
-        this.region=address.getCommune().getCommuneName();
+        this.commune=address.getCommune().getCommuneName();
     }
 }
