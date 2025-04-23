@@ -10,13 +10,13 @@ import com.savorybites.backend.model.verificationModels.VerificationToken;
 import com.savorybites.backend.repository.*;
 import com.savorybites.backend.repository.VerificationRepository.VerificationTokenRepository;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.transaction.Transactional;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.web.firewall.RequestRejectedException;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 
@@ -139,7 +139,7 @@ public class AdminService {
 
     }
 
-    public ResponseEntity<String> banRestaurant(Admin admin, long restaurantID){
+    public ResponseEntity<String> toggleRestaurantBan(Admin admin, long restaurantID){
 
         Admin theAdmin =verifyAdmin(admin);
 
@@ -148,10 +148,18 @@ public class AdminService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Restaurant not found"));
 
 
-        restaurant.setStatus(Status.BANNED);
-        restaurantRepository.save(restaurant);
+        if(restaurant.getStatus()!=Status.BANNED){
+            restaurant.setStatus(Status.BANNED);
+            restaurantRepository.save(restaurant);
+            return ResponseEntity.ok("The Restaurant has been banned successfully.");
+        }else{
+            restaurant.setStatus(Status.VERIFIED);
+            restaurantRepository.save(restaurant);
+            return ResponseEntity.ok("The Restaurant has been unbanned successfully.");
 
-        return ResponseEntity.ok("The Restaurant has been banned.");
+        }
+
+
 
 
     }
@@ -237,7 +245,8 @@ public class AdminService {
         return userRepository.findAllByStatus(status);
     }
 
-    public ResponseEntity<String> banUser(Admin admin, long userID){
+    @Transactional
+    public ResponseEntity<String> toggleUserBan(Admin admin, long userID){
 
         Admin theAdmin =verifyAdmin(admin);
 
@@ -245,11 +254,18 @@ public class AdminService {
                 .findLocalUserById(userID)
                 .orElseThrow(UserNotFoundException::new);
 
+        if(user.getStatus()==Status.BANNED){
+            user.setStatus(Status.VERIFIED);
+            userRepository.save(user);
+            return ResponseEntity.ok("The user has been unbanned successfully.");
+        } else {
+            user.setStatus(Status.BANNED);
+            userRepository.save(user);
 
-        user.setStatus(Status.BANNED);
-        userRepository.save(user);
+            return ResponseEntity.ok("The user has been banned.");
+        }
 
-        return ResponseEntity.ok("The user has been banned.");
+
 
 
     }

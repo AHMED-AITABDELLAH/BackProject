@@ -1,6 +1,5 @@
 package com.savorybites.backend.api.admin;
 
-import com.savorybites.backend.api.dto.Order.OrderDTO;
 import com.savorybites.backend.api.dto.user.UserDTO;
 import com.savorybites.backend.model.Admin;
 import com.savorybites.backend.model.LocalUser;
@@ -34,10 +33,10 @@ public class AdminUserController {
     }
 
 
-    @PutMapping("/{userId}/ban")
-    public ResponseEntity<String> banUser(@AuthenticationPrincipal Admin admin,
+    @PutMapping("/{userId}/toggleBan")
+    public ResponseEntity<String> toggleUserBan(@AuthenticationPrincipal Admin admin,
                                           @PathVariable Long userId) {
-        return adminService.banUser(admin, userId);
+        return adminService.toggleUserBan(admin, userId);
     }
 
     @DeleteMapping("/{userId}")

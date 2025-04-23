@@ -40,7 +40,7 @@ public class AdminRestaurantController {
     @Transactional
     public ResponseEntity<?> banRestaurant(@AuthenticationPrincipal Admin admin,
                                            @PathVariable Long restaurantID) {
-        return adminService.banRestaurant(admin,restaurantID);
+        return adminService.toggleRestaurantBan(admin,restaurantID);
     }
 
     @DeleteMapping("/{restaurantID}")
