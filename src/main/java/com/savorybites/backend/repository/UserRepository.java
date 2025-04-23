@@ -20,4 +20,8 @@ public interface UserRepository extends JpaRepository<LocalUser, Long> {
     long countByStatus(Status status);
 
     List<LocalUser> findAllByStatus(Status status);
+
+    boolean existsByEmail(String email);
+
+    Optional<LocalUser> findByEmail(String email);
 }

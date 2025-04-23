@@ -2,10 +2,11 @@ package com.savorybites.backend.api.user;
 
 import com.savorybites.backend.api.dto.Order.OrderDTO;
 import com.savorybites.backend.api.dto.Order.OrderItemDTO;
-import com.savorybites.backend.api.dto.cart.CartItemDTO;
+import com.savorybites.backend.api.dto.Order.TrackingDataDTO;
 import com.savorybites.backend.model.LocalUser;
 import com.savorybites.backend.model.OrderItem;
 import com.savorybites.backend.model.Orders;
+import com.savorybites.backend.model.TrackingData;
 import com.savorybites.backend.service.OrdersService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -61,5 +62,11 @@ public class OrderController {
         return success
                 ? ResponseEntity.ok("The order is cancelled,you're refund is getting treated.")
                 : ResponseEntity.status(HttpStatus.CONFLICT).build();
+    }
+
+    @GetMapping("/track")
+    public TrackingDataDTO getTrackingData(@AuthenticationPrincipal LocalUser user,
+                                           @RequestParam long orderID){
+        return ordersService.getTrackingData(user,orderID);
     }
 }

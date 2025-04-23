@@ -185,7 +185,7 @@ public class CartService {
 
 
 
-/*public OrderDetails Orders(LocalUser user){
+/*public OrderDetailsDescription Orders(LocalUser user){
         Optional<Cart> optionalUserCart= cartRepository.findByUser(user);
 
         if(optionalUserCart.isEmpty())
@@ -197,7 +197,7 @@ public class CartService {
         if(userItems.isEmpty())
             throw new RuntimeException();//TODO CREATE EXCEPTION
 
-        OrderDetails orderDetails =new OrderDetails();
+        OrderDetailsDescription orderDetails =new OrderDetailsDescription();
 
         for(CartItem item:userItems){
             ItemDetails itemDetails = new ItemDetails(

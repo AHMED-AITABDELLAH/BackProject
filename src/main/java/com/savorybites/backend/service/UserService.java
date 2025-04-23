@@ -234,12 +234,18 @@ public class UserService {
         user.setLastName(userDetailsBody.getLastName());
         user.setFirstName(userDetailsBody.getFirstName());
         user.setPhone(userDetailsBody.getPhone());
-        Optional<LocalUser> opUser =userRepository.findByEmailIgnoreCase(user.getEmail());
 
-        if(opUser.isPresent() && !Objects.equals(opUser.get().getEmail(), userDetailsBody.getEmail()))
+        // Check if the new email is already used by someone else
+        Optional<LocalUser> opUser = userRepository.findByEmail(userDetailsBody.getEmail());
+
+        // If a user with this email exists, and it's not the current user -> throw exception
+        if (opUser.isPresent() && !opUser.get().getId().equals(user.getId())) {
             throw new UserAlreadyExistsException();
+        }
 
+        // It's either the same email or not used by anyone else, so we can safely set it
         user.setEmail(userDetailsBody.getEmail());
+
 
 
 

@@ -1,17 +1,18 @@
 package com.savorybites.backend.service;
 
+import com.savorybites.backend.api.dto.Order.TrackingDataDTO;
 import com.savorybites.backend.model.*;
 import com.savorybites.backend.repository.CartItemRepository;
 import com.savorybites.backend.repository.OrderItemRepository;
 import com.savorybites.backend.repository.OrdersRepository;
+import com.savorybites.backend.repository.TrackingDataRepository;
 import jakarta.transaction.Transactional;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -28,11 +29,12 @@ public class OrdersService {
     private final UserService userService;
     private final SimpMessagingTemplate messagingTemplate;
     private final EmailService emailService;
+    private final TrackingDataRepository trackingDataRepository;
 
     public OrdersService(CartService cartService,
                          OrdersRepository ordersRepository,
                          CartItemRepository cartItemRepository,
-                         AddressService addressService, OrderItemRepository orderItemRepository, UserService userService, SimpMessagingTemplate messagingTemplate, EmailService emailService) {
+                         AddressService addressService, OrderItemRepository orderItemRepository, UserService userService, SimpMessagingTemplate messagingTemplate, EmailService emailService, TrackingDataRepository trackingDataRepository) {
         this.cartService = cartService;
         this.ordersRepository = ordersRepository;
         this.cartItemRepository = cartItemRepository;
@@ -41,6 +43,7 @@ public class OrdersService {
         this.userService = userService;
         this.messagingTemplate = messagingTemplate;
         this.emailService = emailService;
+        this.trackingDataRepository = trackingDataRepository;
     }
 
 
@@ -96,8 +99,12 @@ public class OrdersService {
         }
 
         // Save all orders (cascade saves OrderItems)
-        ordersRepository.saveAll(placedOrders);
-
+        placedOrders=ordersRepository.saveAll(placedOrders);
+        for(Orders order:placedOrders){
+            TrackingData trackingData = new TrackingData();
+            trackingData.setOrder(order);
+            trackingDataRepository.save(trackingData);
+        }
         // Clear cart
         cartItemRepository.deleteAll(cartItemList);
 
@@ -133,6 +140,9 @@ public class OrdersService {
 
             ordersRepository.save(order);
 
+            TrackingData trackingData=trackingDataRepository.findByOrder(order).orElseThrow();
+            trackingData.setCompletedAt(LocalDateTime.now());
+            trackingDataRepository.save(trackingData);
             //Send Notification to the restaurant
             Long restaurantId = order.getRestaurant().getId();
             // You might want to customize the payload (full order, DTO, just IDs, etc)
@@ -219,12 +229,25 @@ public class OrdersService {
                 "/topic/user/" + order.getUser().getId() + "/ordersUpdate",
                 "Your Order (ID : "+order.getId()+") got a status update ("+order.getStatus()+")");
         String status = "";
-        if(order.getStatus()==OrderStatus.PREPARING)
+        TrackingData trackingData=new TrackingData();
+        if(order.getStatus()==OrderStatus.PREPARING){
             status="Being Prepared";
-        else if (order.getStatus()==OrderStatus.OUT_FOR_DELIVERY)
-            status="Out for Delivery";
-        else if (order.getStatus()==OrderStatus.DELIVERED)
-            status="Delivered";
+            trackingData=trackingDataRepository.findByOrder(order).orElseThrow();
+            trackingData.setPreparationStartedAt(LocalDateTime.now());
+        }
+
+        else if (order.getStatus()==OrderStatus.OUT_FOR_DELIVERY) {
+            status = "Out for Delivery";
+            trackingData=trackingDataRepository.findByOrder(order).orElseThrow();
+            trackingData.setPickedUpAt(LocalDateTime.now());
+        }
+        else if (order.getStatus()==OrderStatus.DELIVERED) {
+            status = "Delivered";
+            trackingData=trackingDataRepository.findByOrder(order).orElseThrow();
+            trackingData.setDeliveredAt(LocalDateTime.now());
+        }
+        trackingDataRepository.save(trackingData);
+
         emailService.sendOrderProgressEmail(
                 order.getUser().getUsername(),
                 order.getUser().getEmail(),
@@ -256,6 +279,10 @@ public class OrdersService {
             ResponseEntity.status(HttpStatus.BAD_REQUEST).body("You can't accept this order.");
         order.setStatus(OrderStatus.ACCEPTED);
         ordersRepository.save(order);
+        TrackingData trackingData=trackingDataRepository.findByOrder(order).orElseThrow();
+        trackingData.setAcceptedAt(LocalDateTime.now());
+        trackingDataRepository.save(trackingData);
+
         messagingTemplate.convertAndSend(
                 "/topic/user/" + order.getUser().getId() + "/ordersUpdate",
                 "Your Order (ID : " + order.getId() + ") has been accepted by the restaurant");
@@ -265,5 +292,11 @@ public class OrdersService {
                 orderID,
                 "Accepted");
         return ResponseEntity.ok("Order is Accepted successfully.");
+    }
+
+    public TrackingDataDTO getTrackingData(LocalUser user, long orderID) {
+        Orders order=getManagedOrder(user,orderID);
+        TrackingData trackingData = trackingDataRepository.findByOrder(order).orElseThrow();
+        return new TrackingDataDTO(order,trackingData);
     }
 }

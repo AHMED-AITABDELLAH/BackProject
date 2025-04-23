@@ -8,7 +8,7 @@ import lombok.Setter;
 @NoArgsConstructor
 @Setter
 @Getter
-public class OrderDetails {
+public class OrderDetailsDescription {
 
     private List<ItemDetails> itemDetails;
     private double subTotal;

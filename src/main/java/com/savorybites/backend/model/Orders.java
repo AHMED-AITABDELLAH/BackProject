@@ -55,7 +55,8 @@ public class Orders {
     @Column(name = "status", nullable = false)
     private OrderStatus status = OrderStatus.UNCOMPLETED;
 
-    @OneToOne(orphanRemoval = true)
+
+    @ManyToOne
     private Courier courier;
 
 }

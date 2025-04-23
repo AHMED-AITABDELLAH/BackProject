@@ -4,15 +4,18 @@ import com.savorybites.backend.api.dto.restaurant.CourierRegistrationBody;
 import com.savorybites.backend.model.Courier;
 import com.savorybites.backend.model.Orders;
 import com.savorybites.backend.model.Restaurant;
+import com.savorybites.backend.model.TrackingData;
 import com.savorybites.backend.repository.CourierRepository;
 import com.savorybites.backend.repository.OrdersRepository;
 import com.savorybites.backend.repository.RestaurantRepository;
+import com.savorybites.backend.repository.TrackingDataRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -23,13 +26,15 @@ public class CourierService {
     private final RestaurantRepository restaurantRepository;
     private final OrdersRepository ordersRepository;
     private final SimpMessagingTemplate messagingTemplate;
+    private final TrackingDataRepository trackingDataRepository;
 
 
-    public CourierService(CourierRepository courierRepository, RestaurantRepository restaurantRepository, OrdersRepository ordersRepository, SimpMessagingTemplate messagingTemplate) {
+    public CourierService(CourierRepository courierRepository, RestaurantRepository restaurantRepository, OrdersRepository ordersRepository, SimpMessagingTemplate messagingTemplate, TrackingDataRepository trackingDataRepository) {
         this.courierRepository = courierRepository;
         this.restaurantRepository = restaurantRepository;
         this.ordersRepository = ordersRepository;
         this.messagingTemplate = messagingTemplate;
+        this.trackingDataRepository = trackingDataRepository;
     }
 
     public List<Courier> getAllCouriers(Restaurant restaurant) {
@@ -72,6 +77,9 @@ public class CourierService {
         ordersRepository.save(order);
         courier.setIsAvailable(false);
         courierRepository.save(courier);
+        TrackingData trackingData=trackingDataRepository.findByOrder(order).orElseThrow();
+        trackingData.setCourier(courier);
+        trackingDataRepository.save(trackingData);
         //Send Message to the user that his order was assigned to the courier
         messagingTemplate.convertAndSend(
                 "/topic/user/" + order.getUser().getId() + "/ordersUpdate",
