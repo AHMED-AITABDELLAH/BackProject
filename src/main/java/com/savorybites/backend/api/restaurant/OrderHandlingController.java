@@ -56,12 +56,8 @@ public class OrderHandlingController {
     @GetMapping ("/status")
     public OrderStatus[] getOrderStatus(){
         return new OrderStatus[]{
-                OrderStatus.COMPLETED,
-                OrderStatus.ACCEPTED,
                 OrderStatus.PREPARING,
                 OrderStatus.DELIVERED,
-                OrderStatus.REJECTED,
-                OrderStatus.CANCELLED,
                 OrderStatus.OUT_FOR_DELIVERY};
     }
 
