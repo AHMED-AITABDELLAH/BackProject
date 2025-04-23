@@ -55,6 +55,11 @@ public interface FoodRepository extends JpaRepository<Food, Long> {
     @Query("SELECT MIN(discountedPrice) FROM Food ORDER BY discountedPrice")
     BigDecimal findLeastExpensiveFoodPrice();
 
+    @Query("SELECT max(discountedPrice) FROM Food WHERE restaurant = :restaurant ORDER BY discountedPrice")
+    BigDecimal findRestaurantMostExpensiveFoodPrice(Restaurant restaurant);
+
+    @Query("SELECT MIN(discountedPrice) FROM Food WHERE restaurant = :restaurant ORDER BY discountedPrice")
+    BigDecimal findRestaurantLeastExpensiveFoodPrice(Restaurant restaurant);
 
     List<Food> findAllByStatus(FoodStatus status);
 
@@ -62,4 +67,7 @@ public interface FoodRepository extends JpaRepository<Food, Long> {
 
     long countByIsFlaggedTrue();
 
+    long countByRestaurant(Restaurant restaurant);
+
+    long countByRestaurantAndIsFlaggedTrue(Restaurant restaurant);
 }

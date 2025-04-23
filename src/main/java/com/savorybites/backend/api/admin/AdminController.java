@@ -2,6 +2,7 @@ package com.savorybites.backend.api.admin;
 import com.savorybites.backend.api.dto.admin.DashboardStatistics;
 import com.savorybites.backend.model.*;
 import com.savorybites.backend.service.AdminService;
+import com.savorybites.backend.service.DashboardService;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
@@ -10,10 +11,10 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/admin")
 public class AdminController {
 
-    private final AdminService adminService;
+    private final DashboardService dashboardService;
 
-    public AdminController(AdminService adminService) {
-        this.adminService = adminService;
+    public AdminController(DashboardService dashboardService) {
+        this.dashboardService = dashboardService;
     }
 
     @GetMapping("/accountStatus")
@@ -23,7 +24,7 @@ public class AdminController {
 
     @GetMapping("/dashboard")
     public DashboardStatistics approveRestaurant(@AuthenticationPrincipal Admin admin) {
-        return adminService.getDashboardStats(admin);
+        return dashboardService.getDashboardStats(admin);
     }
 
 

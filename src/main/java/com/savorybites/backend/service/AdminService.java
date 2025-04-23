@@ -1,7 +1,6 @@
 package com.savorybites.backend.service;
 
 
-import com.savorybites.backend.api.dto.admin.*;
 import com.savorybites.backend.api.dto.auth.LoginBody;
 import com.savorybites.backend.api.dto.auth.LoginResponse;
 import com.savorybites.backend.exception.BadAdminCredentialsException;
@@ -286,84 +285,6 @@ public class AdminService {
     public List<Orders> getAllOrdersByStatus(Admin admin, OrderStatus orderStatus) {
         Admin theAdmin = verifyAdmin(admin);
         return ordersRepository.findAllByStatus(orderStatus);
-    }
-
-    /// ////Dashboard Statistics
-
-    private FoodStatistics getFoodStatistics(){
-        FoodStatistics foodStatistics = new FoodStatistics();
-        foodStatistics.setTotalFoodCount(foodRepository.count());
-        foodStatistics.setTotalFlaggedFood(foodRepository.countByIsFlaggedTrue());
-        foodStatistics.setTotalUnflaggedFood();
-        foodStatistics.setMostExpensiveFoodPrice(foodRepository.findMostExpensiveFoodPrice());
-        foodStatistics.setLeastExpensiveFoodPrice(foodRepository.findLeastExpensiveFoodPrice());
-        return foodStatistics;
-    }
-
-    private UserStatistics getUserStatistics(){
-        UserStatistics userStatistics=new UserStatistics();
-        userStatistics.setTotalUserCount(userRepository.count());
-        userStatistics.setBannedUserCount(userRepository.countByStatus(Status.BANNED));
-        userStatistics.setVerifiedUserCount(userRepository.countByStatus(Status.VERIFIED));
-        return userStatistics;
-    }
-
-    private RestaurantStatistics getRestaurantStatistics(){
-        RestaurantStatistics restaurantStatistics=new RestaurantStatistics();
-        restaurantStatistics.setTotalRestaurantCount(restaurantRepository.count());
-        restaurantStatistics.setBannedRestaurantCount(restaurantRepository.countByStatus(Status.BANNED));
-        restaurantStatistics.setVerifiedRestaurantCount(restaurantRepository.countByStatus(Status.VERIFIED));
-        restaurantStatistics.setDeclinedRestaurantCount(restaurantRepository.countByStatus(Status.DECLINED));
-        restaurantStatistics.setApprovedRestaurantCount(restaurantRepository.countByStatus(Status.APPROVED));
-        restaurantStatistics.setPendingRestaurantCount(restaurantRepository.countByStatus(Status.PENDING_APPROVAL));
-        return restaurantStatistics;
-    }
-
-    private List<WeeklyOrderStats> getWeeklyOrderStats() {
-        List<Object[]> rawData = ordersRepository.findWeeklyOrderStats();
-
-        return rawData.stream().map(obj -> {
-            WeeklyOrderStats dto = new WeeklyOrderStats();
-            dto.setWeekLabel((String) obj[0]);
-            dto.setDeliveredOrdersCount(((Number) obj[1]).intValue());
-            dto.setCancelledOrdersCount(((Number) obj[2]).intValue());
-            dto.setDeclinedOrdersCount(((Number) obj[3]).intValue());
-            return dto;
-        }).toList();
-    }
-
-    private List<MonthlyRevenue> getMonthlyRevenue() {
-        List<Object[]> rawData = ordersRepository.findMonthlyRevenueRaw();
-        return rawData.stream()
-                .map(row -> new MonthlyRevenue(
-                        (String) row[0], (BigDecimal) row[1]))
-                .toList();
-    }
-
-    private RevenueStatistics getRevenueStatistics(){
-        RevenueStatistics revenueStatistics = new RevenueStatistics();
-        revenueStatistics.setTotalRevenue(ordersRepository.findTotalRevenue());
-        revenueStatistics.setMonthlyRevenue(getMonthlyRevenue());
-        return revenueStatistics;
-    }
-
-    private OrderStatistics getOrderStatistics(){
-        OrderStatistics orderStatistics = new OrderStatistics();
-        orderStatistics.setTotalOrderCount(ordersRepository.count());
-        orderStatistics.setWeeklyOrderStats(getWeeklyOrderStats());
-        return orderStatistics;
-    }
-
-    public DashboardStatistics getDashboardStats(Admin admin) {
-        Admin theAdmin = verifyAdmin(admin);
-        return new DashboardStatistics(
-                getUserStatistics(),
-                getRestaurantStatistics(),
-                getFoodStatistics(),
-                getOrderStatistics(),
-                getRevenueStatistics()
-
-        );
     }
 
 

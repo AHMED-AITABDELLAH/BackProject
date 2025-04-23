@@ -1,6 +1,9 @@
 package com.savorybites.backend.api.restaurant;
+import com.savorybites.backend.api.dto.admin.DashboardStatistics;
+import com.savorybites.backend.api.dto.restaurant.RestaurantDashboardStatistics;
 import com.savorybites.backend.api.dto.restaurant.RestaurantDetailsBody;
 import com.savorybites.backend.model.Restaurant;
+import com.savorybites.backend.service.DashboardService;
 import com.savorybites.backend.service.RestaurantService;
 import jakarta.transaction.Transactional;
 import org.springframework.http.ResponseEntity;
@@ -13,10 +16,12 @@ public class RestaurantController {
 
 
     private final RestaurantService restaurantService;
+    private final DashboardService dashboardService;
 
-    public RestaurantController(RestaurantService restaurantService)
+    public RestaurantController(RestaurantService restaurantService, DashboardService dashboardService)
     {
         this.restaurantService = restaurantService;
+        this.dashboardService = dashboardService;
     }
 
     @GetMapping("/accountDetails")
@@ -33,5 +38,10 @@ public class RestaurantController {
     )
     {
         return restaurantService.update(restaurant, restaurantDetailsBody);
+    }
+
+    @GetMapping("/dashboard")
+    public RestaurantDashboardStatistics getDashboard(@AuthenticationPrincipal Restaurant restaurant){
+        return dashboardService.getDashboardStats(restaurant);
     }
 }
