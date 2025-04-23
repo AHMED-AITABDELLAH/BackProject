@@ -175,14 +175,42 @@ public class OrdersService {
     /*Restaurant Exclusive*/
 
 
+    //this return all the orders but the one that are incompleted
     public List<Orders> getRestaurantOrderHistory(Restaurant restaurant) {
-        return ordersRepository.findAllCompletedOrdersByRestaurant(restaurant.getId());
+        return ordersRepository.findAllCompletedOrdersByRestaurantAndStatusIsNot(restaurant,OrderStatus.UNCOMPLETED);
     }
 
     public List<Orders> getAllOrdersByStatusAndRestaurant(Restaurant restaurant,OrderStatus status){
         return ordersRepository.findAllByStatusAndRestaurant(status,restaurant);
     }
 
+
+    @Transactional
+    public ResponseEntity<?> updateStatus(Restaurant restaurant,OrderStatus orderStatus,long orderID){
+        Optional<Orders> opOrder = ordersRepository.findByIdAndRestaurant(orderID,restaurant);
+        if(opOrder.isEmpty())
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        Orders order= opOrder.get();
+        //the order shouldn't be out for delivery if not assigned a courier
+        if(orderStatus==OrderStatus.OUT_FOR_DELIVERY){
+            if(order.getCourier()==null)
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("The Orders has no courier assigned to it.");
+        }
+
+        //the order shouldn't be delivered if not assigned a courier
+        if(orderStatus==OrderStatus.DELIVERED){
+            if(order.getCourier()==null)
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("The Orders has no courier assigned to it.");
+            order.getCourier().setIsAvailable(true);
+        }
+        order.setStatus(orderStatus);
+        //Send Notification to the user
+        messagingTemplate.convertAndSend(
+                "/topic/user/" + order.getUser().getId() + "/ordersUpdate",
+                "Your Order (ID : "+order.getId()+") got a status update ("+order.getStatus()+")");
+        ordersRepository.save(order);
+        return ResponseEntity.ok().build();
+    }
 
 
 

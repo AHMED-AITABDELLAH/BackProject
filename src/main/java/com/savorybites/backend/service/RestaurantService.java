@@ -179,6 +179,7 @@ public class RestaurantService {
         restaurant.setProfileImg(restaurantDetailsBody.getProfileImg());
         restaurant.setProfileBanner(restaurantDetailsBody.getProfileBanner());
         restaurant.setTitle(restaurantDetailsBody.getTitle());
+        restaurant.setDescription(restaurantDetailsBody.getDescription());
         restaurant.setPhone(restaurantDetailsBody.getPhone());
         restaurant.setShippingFees(restaurantDetailsBody.getShippingFees());
         //TODO Verify the paypal email

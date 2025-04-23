@@ -43,6 +43,8 @@ public class Orders {
     @Column(name = "is_paid", nullable = false)
     private boolean isPaid = false;
 
+
+
     @Column(name = "payment_date")
     private LocalDateTime paymentDate;
 
@@ -53,6 +55,8 @@ public class Orders {
     @Column(name = "status", nullable = false)
     private OrderStatus status = OrderStatus.UNCOMPLETED;
 
-
+    @OneToOne(orphanRemoval = true)
+    @JoinColumn(name = "courier_id")
+    private Courier courier;
 
 }

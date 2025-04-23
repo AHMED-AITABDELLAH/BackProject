@@ -1,10 +1,10 @@
 package com.savorybites.backend.api.restaurant;
 
 import com.savorybites.backend.api.dto.Order.OrderDTO;
-import com.savorybites.backend.model.Admin;
 import com.savorybites.backend.model.OrderStatus;
 import com.savorybites.backend.model.Orders;
 import com.savorybites.backend.model.Restaurant;
+import com.savorybites.backend.service.CourierService;
 import com.savorybites.backend.service.OrdersService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -18,9 +18,11 @@ public class OrderHandlingController {
 
 
     private final OrdersService ordersService;
+    private final CourierService courierService;
 
-    public OrderHandlingController(OrdersService ordersService) {
+    public OrderHandlingController(OrdersService ordersService, CourierService courierService) {
         this.ordersService = ordersService;
+        this.courierService = courierService;
     }
 
     @GetMapping("/")
@@ -38,6 +40,7 @@ public class OrderHandlingController {
     public OrderStatus[] getOrderStatus(){
         return new OrderStatus[]{
                 OrderStatus.COMPLETED,
+                OrderStatus.ACCEPTED,
                 OrderStatus.PREPARING,
                 OrderStatus.DELIVERED,
                 OrderStatus.REJECTED,
@@ -47,9 +50,20 @@ public class OrderHandlingController {
 
 
     @PutMapping("/{orderID}/updateStatus")
-    public ResponseEntity<String> updateStatus(){
-        return null;
+    public ResponseEntity<?> updateStatus(@AuthenticationPrincipal Restaurant restaurant,
+                                               @RequestParam OrderStatus orderStatus,
+                                               @PathVariable long orderID){
+        return ordersService.updateStatus(restaurant,orderStatus,orderID);
     }
+
+    @PutMapping("/{orderID}/assignCourier")
+    public ResponseEntity<?> assignCourier(@AuthenticationPrincipal Restaurant restaurant,
+                                           @PathVariable long orderID,
+                                           @RequestParam long courierID){
+        return courierService.assignCourier(restaurant,orderID,courierID);
+
+    }
+
 
 
 

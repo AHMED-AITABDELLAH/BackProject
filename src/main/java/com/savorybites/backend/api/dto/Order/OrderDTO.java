@@ -2,6 +2,7 @@ package com.savorybites.backend.api.dto.Order;
 
 import com.savorybites.backend.api.dto.address.AddressShortDTO;
 import com.savorybites.backend.api.dto.restaurant.RestaurantShortDTO;
+import com.savorybites.backend.model.Courier;
 import com.savorybites.backend.model.OrderItem;
 import com.savorybites.backend.model.OrderStatus;
 import com.savorybites.backend.model.Orders;
@@ -21,6 +22,7 @@ public class OrderDTO {
     private List<OrderItemDTO> items;
     private AddressShortDTO deliveryAddress;
     private LocalDateTime orderDate;
+    private Courier courier;
     private double totalPrice;
     private boolean isPaid;
     private LocalDateTime paymentDate;
@@ -38,7 +40,7 @@ public class OrderDTO {
             this.deliveryAddress = new AddressShortDTO(order.getDeliveryAddress());
         else
             this.deliveryAddress=null;
-
+        this.courier= order.getCourier();
         this.orderDate = order.getOrderDate();
         this.totalPrice = order.getTotalPrice();
         this.isPaid = order.isPaid();

@@ -25,6 +25,9 @@ public class Restaurant {
     @Column(name="title",nullable = false)
     private String title;
 
+    @Column(name="description")
+    private String description;
+
     @Column(name = "phone", unique = true ,nullable = false)
     private String phone;
 

@@ -15,6 +15,7 @@ public class RestaurantDetailsBody {
     private String title;
     private String phone;
     private String email;
+    private String description;
     private AddressRegistrationBody addressRegistrationBody;
     private String OldPassword;
     private String newPassword;

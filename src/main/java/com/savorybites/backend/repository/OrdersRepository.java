@@ -61,4 +61,8 @@ public interface OrdersRepository extends JpaRepository<Orders, Long> {
     List<Orders> findAllByStatus(OrderStatus status);
 
     List<Orders> findAllByStatusAndRestaurant(OrderStatus status, Restaurant restaurant);
+
+    List<Orders> findAllCompletedOrdersByRestaurantAndStatusIsNot(Restaurant restaurant, OrderStatus status);
+
+    Optional<Orders> findByIdAndRestaurant(Long id, Restaurant restaurant);
 }
