@@ -6,6 +6,7 @@ import com.savorybites.backend.model.FoodStatus;
 import com.savorybites.backend.model.Restaurant;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.math.BigDecimal;
 import java.util.Collection;
@@ -70,4 +71,30 @@ public interface FoodRepository extends JpaRepository<Food, Long> {
     long countByRestaurant(Restaurant restaurant);
 
     long countByRestaurantAndIsFlaggedTrue(Restaurant restaurant);
+
+    @Query(value = """
+    SELECT r.* FROM RESTAURANT r
+    JOIN FOOD f ON r.id = f.restaurant_id
+    GROUP BY r.id, r.title, r.description, r.email, r.phone, r.PROFILE_IMG, r.status, r.address_id, CONTACT_EMAIL, IS_APPROVED, IS_VERIFIED, PASSWORD, PAYPAL_EMAIL, PROFILE_BANNER, ROLE, SHIPPING_FEES
+    ORDER BY SUM(f.sold) DESC
+    FETCH FIRST 3 ROWS ONLY
+    """, nativeQuery = true)
+    List<Restaurant> findTop3RestaurantsByFoodSold();
+
+    @Query(value = """
+    SELECT * FROM FOOD
+    ORDER BY sold DESC
+    FETCH FIRST 3 ROWS ONLY
+    """, nativeQuery = true)
+    List<Food> findTop3BestSellingFoodsGlobally();
+
+    @Query(value = """
+    SELECT * FROM FOOD
+    WHERE restaurant_id = :restaurantId
+    ORDER BY sold DESC
+    FETCH FIRST 3 ROWS ONLY
+    """, nativeQuery = true)
+    List<Food> findTop3BestSellingFoodsByRestaurant(@Param("restaurantId") Long restaurantId);
+
+
 }

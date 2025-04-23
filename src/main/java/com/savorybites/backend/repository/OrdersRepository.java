@@ -1,5 +1,6 @@
 package com.savorybites.backend.repository;
 
+import com.savorybites.backend.api.dto.user.UserDTO;
 import com.savorybites.backend.model.LocalUser;
 import com.savorybites.backend.model.OrderStatus;
 import com.savorybites.backend.model.Orders;
@@ -81,21 +82,10 @@ public interface OrdersRepository extends JpaRepository<Orders, Long> {
             """, nativeQuery = true)
     BigDecimal findRestaurantTotalRevenue(@Param("restaurantId") Long restaurantId);
 
-
-    @Query(value =
-            "SELECT * " +
-                    "FROM orders " +
-                    "WHERE restaurant_id = :restaurantId " +
-                    "AND status <> 'UNCOMPLETED'",
-            nativeQuery = true)
-    List<Orders> findAllCompletedOrdersByRestaurant(@Param("restaurantId") Long restaurantId);
-
-
     List<Orders> findAllByStatus(OrderStatus status);
 
     List<Orders> findAllByStatusAndRestaurant(OrderStatus status, Restaurant restaurant);
 
-    List<Orders> findAllCompletedOrdersByRestaurantAndStatusIsNot(Restaurant restaurant, OrderStatus status);
 
     Optional<Orders> findByIdAndRestaurant(Long id, Restaurant restaurant);
 
@@ -104,4 +94,49 @@ public interface OrdersRepository extends JpaRepository<Orders, Long> {
     List<Orders> findAllCompletedOrdersByRestaurantAndStatusIsNotIn(Restaurant restaurant, Collection<OrderStatus> statuses);
 
     long countByRestaurant(Restaurant restaurant);
+
+    @Query(value = """
+    SELECT u.* FROM LOCAL_USER u
+    JOIN (
+        SELECT user_id, SUM(total_price) AS total_spent
+        FROM ORDERS
+        WHERE status = 'DELIVERED'
+        GROUP BY user_id
+    ) spending ON u.id = spending.user_id
+    ORDER BY spending.total_spent DESC
+    FETCH FIRST 3 ROWS ONLY
+    """, nativeQuery = true)
+    List<LocalUser> findTop3SpendingUsers();
+
+    @Query(value = """
+    SELECT u.* FROM LOCAL_USER u
+    JOIN (
+        SELECT user_id, SUM(total_price) AS total_spent
+        FROM ORDERS
+        WHERE status = 'DELIVERED' AND restaurant_id = :restaurantId
+        GROUP BY user_id
+    ) spending ON u.id = spending.user_id
+    ORDER BY spending.total_spent DESC
+    FETCH FIRST 3 ROWS ONLY
+    """, nativeQuery = true)
+    List<LocalUser> findTop3SpendingUsersByRestaurant(@Param("restaurantId") Long restaurantId);
+
+
+
+    @Query(value = """
+            SELECT * FROM orders o
+            WHERE o.status = 'DELIVERED'
+            ORDER BY o.total_price DESC
+            FETCH FIRST 3 ROWS ONLY
+            """, nativeQuery = true)
+    List<Orders> findTop3ExpensiveOrders();
+
+    @Query(value = """
+            SELECT * FROM orders o
+            WHERE o.status = 'DELIVERED'
+            AND o.restaurant_id = :restaurantId
+            ORDER BY o.total_price DESC
+            FETCH FIRST 3 ROWS ONLY
+            """, nativeQuery = true)
+    List<Orders> findTop3ExpensiveOrdersByRestaurant(@Param("restaurantId") Long restaurantId);
 }

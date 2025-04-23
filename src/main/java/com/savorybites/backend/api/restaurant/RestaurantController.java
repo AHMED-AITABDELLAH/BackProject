@@ -1,5 +1,4 @@
 package com.savorybites.backend.api.restaurant;
-import com.savorybites.backend.api.dto.admin.DashboardStatistics;
 import com.savorybites.backend.api.dto.restaurant.RestaurantDashboardStatistics;
 import com.savorybites.backend.api.dto.restaurant.RestaurantDetailsBody;
 import com.savorybites.backend.model.Restaurant;

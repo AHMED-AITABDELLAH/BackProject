@@ -1,7 +1,11 @@
 package com.savorybites.backend.service;
 
+import com.savorybites.backend.api.dto.Order.OrderDTO;
 import com.savorybites.backend.api.dto.admin.*;
+import com.savorybites.backend.api.dto.food.FoodDTO;
+import com.savorybites.backend.api.dto.restaurant.RestaurantDTO;
 import com.savorybites.backend.api.dto.restaurant.RestaurantDashboardStatistics;
+import com.savorybites.backend.api.dto.user.UserDTO;
 import com.savorybites.backend.model.Admin;
 import com.savorybites.backend.model.Restaurant;
 import com.savorybites.backend.model.Status;
@@ -41,6 +45,7 @@ public class DashboardService {
         foodStatistics.setTotalUnflaggedFood();
         foodStatistics.setMostExpensiveFoodPrice(foodRepository.findMostExpensiveFoodPrice());
         foodStatistics.setLeastExpensiveFoodPrice(foodRepository.findLeastExpensiveFoodPrice());
+        foodStatistics.setTopSellingFoods(foodRepository.findTop3BestSellingFoodsGlobally().stream().map(FoodDTO::new).toList());
         return foodStatistics;
     }
 
@@ -49,6 +54,7 @@ public class DashboardService {
         userStatistics.setTotalUserCount(userRepository.count());
         userStatistics.setBannedUserCount(userRepository.countByStatus(Status.BANNED));
         userStatistics.setVerifiedUserCount(userRepository.countByStatus(Status.VERIFIED));
+        userStatistics.setTopSpendingUsers(ordersRepository.findTop3SpendingUsers().stream().map(UserDTO::new).toList());
         return userStatistics;
     }
 
@@ -60,6 +66,9 @@ public class DashboardService {
         restaurantStatistics.setDeclinedRestaurantCount(restaurantRepository.countByStatus(Status.DECLINED));
         restaurantStatistics.setApprovedRestaurantCount(restaurantRepository.countByStatus(Status.APPROVED));
         restaurantStatistics.setPendingRestaurantCount(restaurantRepository.countByStatus(Status.PENDING_APPROVAL));
+        restaurantStatistics.setMostPopularRestaurants(foodRepository
+                .findTop3RestaurantsByFoodSold()
+                .stream().map(RestaurantDTO::new).toList());
         return restaurantStatistics;
     }
 
@@ -95,6 +104,9 @@ public class DashboardService {
         OrderStatistics orderStatistics = new OrderStatistics();
         orderStatistics.setTotalOrderCount(ordersRepository.count());
         orderStatistics.setWeeklyOrderStats(getWeeklyOrderStats());
+        orderStatistics.setTopBigOrders(ordersRepository
+                .findTop3ExpensiveOrders()
+                .stream().map(OrderDTO::new).toList());
         return orderStatistics;
     }
 
@@ -145,6 +157,9 @@ public class DashboardService {
         OrderStatistics orderStatistics = new OrderStatistics();
         orderStatistics.setTotalOrderCount(ordersRepository.countByRestaurant(restaurant));
         orderStatistics.setWeeklyOrderStats(getRestaurantWeeklyOrderStats(restaurant));
+        orderStatistics.setTopBigOrders(ordersRepository
+                .findTop3ExpensiveOrdersByRestaurant(restaurant.getId())
+                .stream().map(OrderDTO::new).toList());
         return orderStatistics;
     }
 
@@ -156,6 +171,9 @@ public class DashboardService {
         foodStatistics.setTotalUnflaggedFood();
         foodStatistics.setMostExpensiveFoodPrice(foodRepository.findRestaurantMostExpensiveFoodPrice(restaurant));
         foodStatistics.setLeastExpensiveFoodPrice(foodRepository.findRestaurantLeastExpensiveFoodPrice(restaurant));
+        foodStatistics.setTopSellingFoods(foodRepository.
+                findTop3BestSellingFoodsByRestaurant(restaurant.getId()).
+                stream().map(FoodDTO::new).toList());
         return foodStatistics;
     }
 
