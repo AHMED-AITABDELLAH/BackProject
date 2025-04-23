@@ -3,7 +3,6 @@ import com.savorybites.backend.api.dto.auth.LoginBody;
 import com.savorybites.backend.api.dto.auth.LoginResponse;
 import com.savorybites.backend.api.dto.auth.UserRegistrationBody;
 import com.savorybites.backend.model.LocalUser;
-import com.savorybites.backend.service.PasswordResetTokenService;
 import com.savorybites.backend.service.UserService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
@@ -23,15 +22,14 @@ public class AuthUserController {
 
     @PostMapping("/register")
     public ResponseEntity<LocalUser> registerUser
-            (@Valid @RequestBody UserRegistrationBody userRegistrationBody)
-    {
+            (@Valid @RequestBody UserRegistrationBody userRegistrationBody) {
         userService.Registration(userRegistrationBody);
         return ResponseEntity.ok().build();
     }
 
     @PostMapping("/login")
     public ResponseEntity<LoginResponse> loginUser
-            (@Valid @RequestBody LoginBody loginBody) {//I used RwquestBody for the email & passwod instead of passin them in the url
+            (@Valid @RequestBody LoginBody loginBody)  {//I used RwquestBody for the email & passwod instead of passin them in the url
 
 
         String jwtToken = userService.Login(loginBody);

@@ -2,6 +2,6 @@ package com.savorybites.backend.exception.user;
 
 public class EmailFailureException extends RuntimeException {
     public EmailFailureException(){
-        super("Something Went Wrong!");
+        super("Failed to send email!");
     }
 }
