@@ -58,7 +58,7 @@ public class UserService {
     /// ////////////////////////////////////////////SignUP-Registration//////////////////////////////////////
     @Transactional
     public void Registration(UserRegistrationBody userRegistrationBody)
-            throws UserAlreadyExistsException {
+            throws UserAlreadyExistsException{
 
         if (
                 (userRepository
@@ -186,7 +186,7 @@ public class UserService {
 
     public String Login(LoginBody loginBody)//The logic for the login
     //we get the email passed by the login body
-            throws BadCredentialsException, UserNotFoundException , UserNotVerified {
+            throws BadCredentialsException, UserNotFoundException, UserNotVerified {
         Optional<LocalUser> userOp = userRepository.findByEmailIgnoreCase(loginBody.getEmail());
         //if the User exists
         if (userOp.isPresent()) {
