@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.math.BigDecimal;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -65,4 +66,8 @@ public interface OrdersRepository extends JpaRepository<Orders, Long> {
     List<Orders> findAllCompletedOrdersByRestaurantAndStatusIsNot(Restaurant restaurant, OrderStatus status);
 
     Optional<Orders> findByIdAndRestaurant(Long id, Restaurant restaurant);
+
+    List<Orders> findAllCompletedOrdersByRestaurantAndStatusIs(Restaurant restaurant, OrderStatus status);
+
+    List<Orders> findAllCompletedOrdersByRestaurantAndStatusIsNotIn(Restaurant restaurant, Collection<OrderStatus> statuses);
 }

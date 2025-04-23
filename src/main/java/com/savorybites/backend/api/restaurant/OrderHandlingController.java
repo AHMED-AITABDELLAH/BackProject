@@ -36,6 +36,23 @@ public class OrderHandlingController {
         return ordersList.stream().map(OrderDTO::new).toList();
     }
 
+    @GetMapping("/incomingOrders")
+    public List<OrderDTO> getIncomingOrders(@AuthenticationPrincipal Restaurant restaurant){
+        return ordersService.getRestaurantIncomingOrders(restaurant).stream().map(OrderDTO::new).toList();
+    }
+
+    @PutMapping("/incomingOrders/{orderID}/reject")
+    public ResponseEntity<?> rejectOrder(@AuthenticationPrincipal Restaurant restaurant,
+                                         @PathVariable long orderID){
+        return ordersService.rejectOrder(restaurant,orderID);
+    }
+
+    @PutMapping("/incomingOrders/{orderID}/accept")
+    public ResponseEntity<?> acceptOrder(@AuthenticationPrincipal Restaurant restaurant,
+                                         @PathVariable long orderID){
+        return ordersService.acceptOrder(restaurant,orderID);
+    }
+
     @GetMapping ("/status")
     public OrderStatus[] getOrderStatus(){
         return new OrderStatus[]{

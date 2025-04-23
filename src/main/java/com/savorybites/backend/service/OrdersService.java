@@ -27,10 +27,12 @@ public class OrdersService {
     private final OrderItemRepository orderItemRepository;
     private final UserService userService;
     private final SimpMessagingTemplate messagingTemplate;
+    private final EmailService emailService;
+
     public OrdersService(CartService cartService,
                          OrdersRepository ordersRepository,
                          CartItemRepository cartItemRepository,
-                         AddressService addressService, OrderItemRepository orderItemRepository, UserService userService, SimpMessagingTemplate messagingTemplate) {
+                         AddressService addressService, OrderItemRepository orderItemRepository, UserService userService, SimpMessagingTemplate messagingTemplate, EmailService emailService) {
         this.cartService = cartService;
         this.ordersRepository = ordersRepository;
         this.cartItemRepository = cartItemRepository;
@@ -38,6 +40,7 @@ public class OrdersService {
         this.orderItemRepository = orderItemRepository;
         this.userService = userService;
         this.messagingTemplate = messagingTemplate;
+        this.emailService = emailService;
     }
 
 
@@ -159,6 +162,10 @@ public class OrdersService {
         Orders order=getManagedOrder(user,orderID);
         if(order.getStatus()==OrderStatus.UNCOMPLETED || order.getStatus()==OrderStatus.COMPLETED) {
             order.setStatus(OrderStatus.CANCELLED);
+            emailService.sendOrderCancelledByUserEmail(user.getUsername(),user.getEmail(),orderID);
+            messagingTemplate.convertAndSend(
+                    "/topic/restaurant/" + order.getRestaurant().getId() + "/orders",
+                    "Order (ID : " + order.getId() + ") has been cancel by the user");
             //TODO TREATING THE REFUND
             return true;
         }
@@ -177,13 +184,16 @@ public class OrdersService {
 
     //this return all the orders but the one that are incompleted
     public List<Orders> getRestaurantOrderHistory(Restaurant restaurant) {
-        return ordersRepository.findAllCompletedOrdersByRestaurantAndStatusIsNot(restaurant,OrderStatus.UNCOMPLETED);
+        return ordersRepository.findAllCompletedOrdersByRestaurantAndStatusIsNotIn(restaurant,List.of(OrderStatus.UNCOMPLETED,OrderStatus.COMPLETED));
+    }
+
+    public List<Orders> getRestaurantIncomingOrders(Restaurant restaurant) {
+        return ordersRepository.findAllCompletedOrdersByRestaurantAndStatusIs(restaurant,OrderStatus.COMPLETED);
     }
 
     public List<Orders> getAllOrdersByStatusAndRestaurant(Restaurant restaurant,OrderStatus status){
         return ordersRepository.findAllByStatusAndRestaurant(status,restaurant);
     }
-
 
     @Transactional
     public ResponseEntity<?> updateStatus(Restaurant restaurant,OrderStatus orderStatus,long orderID){
@@ -196,7 +206,6 @@ public class OrdersService {
             if(order.getCourier()==null)
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("The Orders has no courier assigned to it.");
         }
-
         //the order shouldn't be delivered if not assigned a courier
         if(orderStatus==OrderStatus.DELIVERED){
             if(order.getCourier()==null)
@@ -204,14 +213,57 @@ public class OrdersService {
             order.getCourier().setIsAvailable(true);
         }
         order.setStatus(orderStatus);
+        ordersRepository.save(order);
         //Send Notification to the user
         messagingTemplate.convertAndSend(
                 "/topic/user/" + order.getUser().getId() + "/ordersUpdate",
                 "Your Order (ID : "+order.getId()+") got a status update ("+order.getStatus()+")");
-        ordersRepository.save(order);
+        String status = "";
+        if(order.getStatus()==OrderStatus.PREPARING)
+            status="Being Prepared";
+        else if (order.getStatus()==OrderStatus.OUT_FOR_DELIVERY)
+            status="Out for Delivery";
+        else if (order.getStatus()==OrderStatus.DELIVERED)
+            status="Delivered";
+        emailService.sendOrderProgressEmail(
+                order.getUser().getUsername(),
+                order.getUser().getEmail(),
+                orderID,
+                status);
         return ResponseEntity.ok().build();
     }
 
+    public ResponseEntity<?> rejectOrder(Restaurant restaurant, long orderID) {
+        Orders order = ordersRepository.findByIdAndRestaurant(orderID, restaurant).orElseThrow();
+        if (order.getStatus() != OrderStatus.COMPLETED)
+            ResponseEntity.status(HttpStatus.BAD_REQUEST).body("You can't decline this order.");
+        order.setStatus(OrderStatus.REJECTED);
+        ordersRepository.save(order);
+        messagingTemplate.convertAndSend(
+                "/topic/user/" + order.getUser().getId() + "/ordersUpdate",
+                "Your Order (ID : " + order.getId() + ") has been rejected by the restaurant");
+        emailService.sendOrderRejectedByRestaurantEmail(
+                order.getUser().getUsername(),
+                order.getUser().getEmail(),
+                orderID,
+                order.getRestaurant().getTitle());
+        return ResponseEntity.ok("Order is Rejected successfully.");
+    }
 
-
+    public ResponseEntity<?> acceptOrder(Restaurant restaurant, long orderID) {
+        Orders order = ordersRepository.findByIdAndRestaurant(orderID, restaurant).orElseThrow();
+        if (order.getStatus() != OrderStatus.COMPLETED)
+            ResponseEntity.status(HttpStatus.BAD_REQUEST).body("You can't accept this order.");
+        order.setStatus(OrderStatus.ACCEPTED);
+        ordersRepository.save(order);
+        messagingTemplate.convertAndSend(
+                "/topic/user/" + order.getUser().getId() + "/ordersUpdate",
+                "Your Order (ID : " + order.getId() + ") has been accepted by the restaurant");
+        emailService.sendOrderProgressEmail(
+                order.getUser().getUsername(),
+                order.getUser().getEmail(),
+                orderID,
+                "Accepted");
+        return ResponseEntity.ok("Order is Accepted successfully.");
+    }
 }

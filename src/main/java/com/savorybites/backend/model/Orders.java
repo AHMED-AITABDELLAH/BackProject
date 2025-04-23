@@ -56,7 +56,6 @@ public class Orders {
     private OrderStatus status = OrderStatus.UNCOMPLETED;
 
     @OneToOne(orphanRemoval = true)
-    @JoinColumn(name = "courier_id")
     private Courier courier;
 
 }
