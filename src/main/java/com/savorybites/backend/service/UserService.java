@@ -14,6 +14,9 @@ import com.savorybites.backend.repository.VerificationRepository.PasswordResetTo
 import com.savorybites.backend.repository.UserRepository;
 import com.savorybites.backend.repository.RestaurantRepository;
 import com.savorybites.backend.repository.VerificationRepository.VerificationTokenRepository;
+import com.stripe.exception.StripeException;
+import com.stripe.model.Customer;
+import com.stripe.param.CustomerCreateParams;
 import jakarta.transaction.Transactional;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -36,6 +39,7 @@ public class UserService {
     private final PasswordResetTokenRepository passwordResetTokenRepository;
     private final RestaurantRepository restaurantRepository;
     private final CartService cartService;
+    private final StripeService stripeService;
 
     public UserService(UserRepository userRepository,
                        EncryptionService encryptionService,
@@ -44,7 +48,7 @@ public class UserService {
                        VerificationTokenRepository verificationTokenRepository,
                        PasswordResetTokenRepository passwordResetTokenRepository,
                        RestaurantRepository restaurantRepository,
-                       CartService cartService) {
+                       CartService cartService, StripeService stripeService) {
         this.userRepository = userRepository;
         this.encryptionService = encryptionService;
         this.jwtService = jwtService;
@@ -53,6 +57,7 @@ public class UserService {
         this.passwordResetTokenRepository = passwordResetTokenRepository;
         this.restaurantRepository = restaurantRepository;
         this.cartService = cartService;
+        this.stripeService = stripeService;
     }
 
     /// ////////////////////////////////////////////SignUP-Registration//////////////////////////////////////
@@ -270,6 +275,17 @@ public class UserService {
             return optionalUser.get();
         //TODO idk
         throw new UserNotFoundException();
+    }
+
+
+    /// /////////////////////Stripe Setup for users/////////////////////////////////////////////////
+
+
+
+    public ResponseEntity<?> savePaymentMethod(LocalUser user){
+        LocalUser managedUser=getManagedUser(user);
+        Customer customerId = stripeService.createStripeCustomer(managedUser.getEmail());
+
     }
 
 

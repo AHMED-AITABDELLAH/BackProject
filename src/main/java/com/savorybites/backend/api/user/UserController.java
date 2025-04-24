@@ -31,9 +31,4 @@ public class UserController {
         return userService.update(user,userDetailsBody);
     }
 
-    @GetMapping("/paymentMethods")
-    public void get2(){
-
-    }
-
 }
