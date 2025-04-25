@@ -282,11 +282,4 @@ public class UserService {
 
 
 
-    public ResponseEntity<?> savePaymentMethod(LocalUser user){
-        LocalUser managedUser=getManagedUser(user);
-        Customer customerId = stripeService.createStripeCustomer(managedUser.getEmail());
-
-    }
-
-
 }

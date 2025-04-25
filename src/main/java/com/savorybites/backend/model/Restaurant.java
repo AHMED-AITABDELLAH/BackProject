@@ -41,9 +41,6 @@ public class Restaurant {
     @Column(name = "contact_email", unique = true,nullable = false)
     private String contactEmail;
 
-    @Column(name = "paypal_email", unique = true,nullable = false)
-    private String paypalEmail;
-
     @Column(name = "profile_img")
     private String profileImg;
 
@@ -67,6 +64,9 @@ public class Restaurant {
     @JoinColumn(name = "address_id", referencedColumnName = "address_id", nullable = false)
     private Address address;
 
+    @JsonIgnore
+    @Column(name = "stripe_account_id")
+    private String stripeAccountId;
 
     @JsonIgnore
     @OneToMany(mappedBy = "restaurant",cascade = CascadeType.ALL, orphanRemoval = true)

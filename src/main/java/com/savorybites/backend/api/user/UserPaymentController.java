@@ -1,5 +1,6 @@
 package com.savorybites.backend.api.user;
 
+import com.savorybites.backend.api.dto.user.PaymentMethodDTO;
 import com.savorybites.backend.model.LocalUser;
 import com.savorybites.backend.service.StripeService;
 import com.stripe.exception.StripeException;
@@ -12,8 +13,8 @@ import java.util.Map;
 
 @RequiredArgsConstructor
 @RestController
-@RequestMapping("/paymentMethods")
-public class PaymentController {
+@RequestMapping("/user/paymentMethods")
+public class UserPaymentController {
 
 
     private final StripeService stripeService;
@@ -22,7 +23,7 @@ public class PaymentController {
      * Create SetupIntent and return the client secret to frontend.
      * The frontend will use this to collect and save a new card.
      */
-    @PostMapping("/setup-intent")
+    @PostMapping("/setupIntent")
     public ResponseEntity<?> createSetupIntent(@AuthenticationPrincipal LocalUser user) throws StripeException {
         String clientSecret = stripeService.createSetupIntent(user);
         return ResponseEntity.ok(Map.of("clientSecret", clientSecret));
@@ -32,7 +33,7 @@ public class PaymentController {
      * After the frontend collects the card via Stripe Elements,
      * it will call this API with the `paymentMethodId` returned by Stripe.
      */
-    @PostMapping("/payment-methods")
+    @PostMapping("/savePaymentMethod")
     public ResponseEntity<?> savePaymentMethod(
             @AuthenticationPrincipal LocalUser user,
             @RequestBody Map<String, String> request
@@ -48,15 +49,15 @@ public class PaymentController {
     /**
      * Get all saved cards (payment methods) for the logged-in user.
      */
-    @GetMapping("/payment-methods")
+    @GetMapping("/")
     public ResponseEntity<?> getUserPaymentMethods(@AuthenticationPrincipal LocalUser user) {
-        return ResponseEntity.ok(stripeService.getPaymentMethods(user));
+        return ResponseEntity.ok(stripeService.getPaymentMethods(user).stream().map(PaymentMethodDTO::new).toList());
     }
 
     /**
      * Mark a card as the default payment method.
      */
-    @PutMapping("/payment-methods/{id}/default")
+    @PutMapping("/{id}/default")
     public ResponseEntity<?> setDefaultMethod(
             @AuthenticationPrincipal LocalUser user,
             @PathVariable Long id
@@ -68,7 +69,7 @@ public class PaymentController {
     /**
      * Delete a saved payment method.
      */
-    @DeleteMapping("/payment-methods/{id}")
+    @DeleteMapping("/{id}")
     public ResponseEntity<?> deletePaymentMethod(
             @AuthenticationPrincipal LocalUser user,
             @PathVariable Long id

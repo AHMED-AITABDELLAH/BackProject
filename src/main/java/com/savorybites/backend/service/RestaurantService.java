@@ -51,7 +51,7 @@ public class RestaurantService {
     }
 
 
-    public void registerRestaurant(RestaurantRegistrationBody body)
+    public ResponseEntity<Long> registerRestaurant(RestaurantRegistrationBody body)
             throws UserAlreadyExistsException {
 
         if (restaurantRepository.findByEmailIgnoreCase(body.getEmail()).isPresent())
@@ -64,7 +64,6 @@ public class RestaurantService {
         restaurant.setEmail(body.getEmail());
         restaurant.setPhone(body.getPhone());
         restaurant.setContactEmail(body.getContactEmail());
-        restaurant.setPaypalEmail(body.getPaypalEmail());
         restaurant.setPassword(encryptionService.encryptPassword(body.getPassword()));
         restaurant.setShippingFees(body.getShippingFees());
         restaurant.setIsApproved(false);
@@ -81,9 +80,9 @@ public class RestaurantService {
         // Step 3: Save the restaurant (cascade saves address)
         restaurantRepository.save(restaurant);
 
+        return ResponseEntity.ok(restaurant.getId());
 
-        // Step 4: Send email
-        emailService.sendAccountIsWaitingApproval(restaurant);
+
     }
 
     public VerificationToken createVerificationToken(Restaurant restaurant) {
@@ -182,8 +181,6 @@ public class RestaurantService {
         restaurant.setDescription(restaurantDetailsBody.getDescription());
         restaurant.setPhone(restaurantDetailsBody.getPhone());
         restaurant.setShippingFees(restaurantDetailsBody.getShippingFees());
-        //TODO Verify the paypal email
-        restaurant.setPaypalEmail(restaurantDetailsBody.getPaypalEmail());
 
         restaurant.setContactEmail(restaurantDetailsBody.getContactEmail());
 
@@ -251,4 +248,7 @@ public class RestaurantService {
     }
 
 
+    public Restaurant getRestaurantsById(long restaurantID) {
+        return restaurantRepository.findById(restaurantID).orElseThrow();
+    }
 }

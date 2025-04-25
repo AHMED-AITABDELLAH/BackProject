@@ -75,7 +75,7 @@ public class LocalUser {
     private List<VerificationToken> verificationTokens = new ArrayList<>();
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
-    private List<ClientPaymentMethod> clientPaymentMethods;
+    private List<PlatformPaymentMethod> platformPaymentMethods;
 
 
 

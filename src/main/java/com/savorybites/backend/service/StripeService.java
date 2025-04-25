@@ -1,17 +1,16 @@
 package com.savorybites.backend.service;
 
-import com.savorybites.backend.model.ClientPaymentMethod;
+import com.savorybites.backend.model.PlatformPaymentMethod;
 import com.savorybites.backend.model.LocalUser;
-import com.savorybites.backend.repository.ClientPaymentMethodRepository;
-import com.savorybites.backend.repository.UserRepository;
+import com.savorybites.backend.model.Restaurant;
+import com.savorybites.backend.repository.PlatformPaymentMethodRepository;
+import com.savorybites.backend.repository.RestaurantRepository;
 import com.stripe.exception.StripeException;
-import com.stripe.model.Customer;
-import com.stripe.model.PaymentMethod;
-import com.stripe.model.SetupIntent;
-import com.stripe.param.CustomerCreateParams;
-import com.stripe.param.PaymentMethodAttachParams;
-import com.stripe.param.SetupIntentCreateParams;
+import com.stripe.model.*;
+import com.stripe.param.*;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -23,12 +22,18 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class StripeService {
 
-    private final ClientPaymentMethodRepository clientPaymentMethodRepository;
 
+    @Value("${app.stripe.return-url}")
+    private String returnUrl;
+    @Value("${app.stripe.refresh-url}")
+    private String refreshUrl;
+    private final PlatformPaymentMethodRepository platformPaymentMethodRepository;
+    private final RestaurantRepository restaurantRepository;
 
+    /**User Logic**/
     public String createOrGetStripeCustomer(LocalUser user) throws StripeException {
         // Check if any payment method exists for the user
-        Optional<ClientPaymentMethod> existing = clientPaymentMethodRepository
+        Optional<PlatformPaymentMethod> existing = platformPaymentMethodRepository
                 .findFirstByUserOrderByIdAsc(user);
 
         if (existing.isPresent()) {
@@ -37,13 +42,6 @@ public class StripeService {
 
         Customer customer = Customer.create(CustomerCreateParams.builder()
                 .setEmail(user.getEmail()).build());
-
-        // Save a blank payment method just to hold the customerId
-        ClientPaymentMethod pm = new ClientPaymentMethod();
-        pm.setUser(user);
-        pm.setStripeCustomerId(customer.getId());
-        pm.setIsDefault(false); // Placeholder, not a real card
-        clientPaymentMethodRepository.save(pm);
 
         return customer.getId();
     }
@@ -59,6 +57,7 @@ public class StripeService {
         return intent.getClientSecret();
     }
 
+    @Transactional
     public void savePaymentMethod(LocalUser user, String paymentMethodId) throws StripeException {
         String customerId = createOrGetStripeCustomer(user);
 
@@ -67,7 +66,7 @@ public class StripeService {
                 .setCustomer(customerId)
                 .build());
 
-        ClientPaymentMethod clientPm = new ClientPaymentMethod();
+        PlatformPaymentMethod clientPm = new PlatformPaymentMethod();
         clientPm.setUser(user);
         clientPm.setStripeCustomerId(customerId);
         clientPm.setStripePaymentMethodId(paymentMethod.getId());
@@ -76,34 +75,82 @@ public class StripeService {
         clientPm.setExpMonth(paymentMethod.getCard().getExpMonth());
         clientPm.setExpYear(paymentMethod.getCard().getExpYear());
 
-        boolean hasDefault = clientPaymentMethodRepository.existsByUserAndIsDefaultTrue(user);
+        boolean hasDefault = platformPaymentMethodRepository.existsByUserAndIsDefaultTrue(user);
         clientPm.setIsDefault(!hasDefault); // First card = default
 
-        clientPaymentMethodRepository.save(clientPm);
+        platformPaymentMethodRepository.save(clientPm);
     }
 
-    public List<ClientPaymentMethod> getPaymentMethods(LocalUser user) {
-        return clientPaymentMethodRepository.findAllByUser(user);
+    public List<PlatformPaymentMethod> getPaymentMethods(LocalUser user) {
+        return platformPaymentMethodRepository.findAllByUser(user);
     }
 
+    @Transactional
     public void setDefaultPaymentMethod(Long methodId, LocalUser user) {
-        clientPaymentMethodRepository.clearAllDefaultsForUser(user.getId());
+        platformPaymentMethodRepository
+                .findByUserAndIsDefaultTrue(user)
+                .orElseThrow()
+                .setIsDefault(false);
 
-        ClientPaymentMethod method = clientPaymentMethodRepository.findByIdAndUser(methodId, user)
+        PlatformPaymentMethod method = platformPaymentMethodRepository.findByIdAndUser(methodId, user)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
         method.setIsDefault(true);
-        clientPaymentMethodRepository.save(method);
+        platformPaymentMethodRepository.save(method);
     }
 
+    @Transactional
     public void deletePaymentMethod(Long methodId, LocalUser user) throws StripeException {
-        ClientPaymentMethod method = clientPaymentMethodRepository.findByIdAndUser(methodId, user)
+        PlatformPaymentMethod method = platformPaymentMethodRepository.findByIdAndUser(methodId, user)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
         if (method.getStripePaymentMethodId() != null) {
             PaymentMethod.retrieve(method.getStripePaymentMethodId()).detach();
         }
 
-        clientPaymentMethodRepository.delete(method);
+        platformPaymentMethodRepository.delete(method);
+    }
+
+    /**Restaurant Logic**/
+
+    @Transactional
+    public String createExpressAccountAndOnboardingLink(Restaurant restaurant) throws StripeException {
+
+        // 1. Create Stripe test Account
+        AccountCreateParams params = AccountCreateParams.builder()
+                .setType(AccountCreateParams.Type.CUSTOM)
+                .setCountry("GB") // Use the country code of the restaurant (UK)
+                .setEmail(restaurant.getEmail())
+                .setBusinessType(AccountCreateParams.BusinessType.INDIVIDUAL)
+                // Add required capabilities
+                .setCapabilities(
+                        AccountCreateParams.Capabilities.builder()
+                                .setCardPayments(AccountCreateParams.Capabilities.CardPayments.builder()
+                                        .setRequested(true)
+                                        .build())
+                                .setTransfers(AccountCreateParams.Capabilities.Transfers.builder()
+                                        .setRequested(true)
+                                        .build())
+                                .build()
+                )
+                .build();
+
+        Account account = Account.create(params);
+
+        // 2. Save Stripe account ID to restaurant entity
+        restaurant.setStripeAccountId(account.getId());
+        restaurantRepository.save(restaurant);
+
+        // 3. Create Onboarding link
+        AccountLinkCreateParams linkParams = AccountLinkCreateParams.builder()
+                .setAccount(account.getId())
+                .setRefreshUrl(refreshUrl) // redirect here if onboarding fails
+                .setReturnUrl(returnUrl)   // redirect here after success
+                .setType(AccountLinkCreateParams.Type.ACCOUNT_ONBOARDING)
+                .build();
+
+        AccountLink link = AccountLink.create(linkParams);
+
+        return link.getUrl(); // Send this to the frontend to redirect the restaurant
     }
 }

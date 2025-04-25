@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SavoryBites - Restaurant Registration</title>
+    <!-- Include Stripe.js -->
+    <script src="https://js.stripe.com/v3/"></script>
+    <style>
+        :root {
+            --primary-color: #FD4C2A;
+            --primary-hover: #e34325;
+            --text-color: #333;
+            --light-gray: #f5f5f5;
+            --border-color: #ddd;
+            --success-color: #4CAF50;
+        }
+        /* ...[rest of your CSS remains unchanged]... */
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background-color: #f9f9f9; color: var(--text-color); line-height: 1.6; padding: 20px; }
+        .container { max-width: 600px; margin: 0 auto; background: white; border-radius: 10px; box-shadow: 0 0 20px rgba(0, 0, 0, 0.1); padding: 30px; }
+        h1 { text-align: center; margin-bottom: 30px; color: var(--primary-color); }
+        .progress-bar { display: flex; justify-content: space-between; margin-bottom: 30px; position: relative; }
+        .progress-bar::before { content: ''; position: absolute; top: 15px; left: 0; right: 0; height: 4px; background: var(--light-gray); z-index: 1; }
+        .progress-step { display: flex; flex-direction: column; align-items: center; z-index: 2; }
+        .step-number { width: 30px; height: 30px; border-radius: 50%; background: var(--light-gray); color: #999; display: flex; justify-content: center; align-items: center; font-weight: bold; margin-bottom: 5px; border: 3px solid var(--light-gray); }
+        .step-label { font-size: 14px; color: #999; }
+        .progress-step.active .step-number { background: white; border-color: var(--primary-color); color: var(--primary-color); }
+        .progress-step.completed .step-number { background: var(--primary-color); border-color: var(--primary-color); color: white; }
+        .progress-step.active .step-label, .progress-step.completed .step-label { color: var(--primary-color); font-weight: 500; }
+        .form-step { display: none; }
+        .form-step.active { display: block; animation: fadeIn 0.5s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .form-group { margin-bottom: 20px; }
+        label { display: block; margin-bottom: 8px; font-weight: 500; }
+        input, select { width: 100%; padding: 12px; border: 1px solid var(--border-color); border-radius: 6px; font-size: 16px; transition: border 0.3s; }
+        input:focus, select:focus { outline: none; border-color: var(--primary-color); }
+        .btn { background: var(--primary-color); color: white; border: none; padding: 12px 20px; border-radius: 6px; cursor: pointer; font-size: 16px; font-weight: 500; transition: background 0.3s; width: 100%; margin-top: 10px; }
+        .btn:hover { background: var(--primary-hover); }
+        .btn-secondary { background: white; color: var(--primary-color); border: 1px solid var(--primary-color); }
+        .btn-secondary:hover { background: var(--light-gray); }
+        .btn-container { display: flex; gap: 10px; margin-top: 30px; }
+        .btn-container .btn { flex: 1; }
+        .error { color: #e74c3c; font-size: 14px; margin-top: 5px; display: none; }
+        .success-message { text-align: center; padding: 30px; }
+        .success-icon { font-size: 60px; color: var(--success-color); margin-bottom: 20px; }
+        .success-message h2 { color: var(--success-color); margin-bottom: 10px; }
+        .coordinates-container { display: flex; gap: 10px; margin-top: 10px; }
+        .coordinates-container input { flex: 1; }
+        .get-coordinates { background: #3498db; padding: 12px; border-radius: 6px; color: white; border: none; cursor: pointer; transition: background 0.3s; }
+        .get-coordinates:hover { background: #2980b9; }
+        .loading { display: inline-block; width: 20px; height: 20px; border: 3px solid rgba(255,255,255,.3); border-radius: 50%; border-top-color: white; animation: spin 1s ease-in-out infinite; margin-right: 10px; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>Restaurant Registration</h1>
+    <div class="progress-bar">
+        <div class="progress-step completed" id="step1">
+            <div class="step-number">1</div>
+            <div class="step-label">Basic Details</div>
+        </div>
+        <div class="progress-step active" id="step2">
+            <div class="step-number">2</div>
+            <div class="step-label">Location</div>
+        </div>
+        <div class="progress-step" id="step3">
+            <div class="step-number">3</div>
+            <div class="step-label">Payment Setup</div>
+        </div>
+    </div>
+    <!-- Step 1: Basic Details -->
+    <form id="form1" class="form-step active">
+        <div class="form-group">
+            <label for="email">Email</label>
+            <input type="email" id="email" required>
+            <div class="error" id="email-error">Please enter a valid email</div>
+        </div>
+        <div class="form-group">
+            <label for="password">Password</label>
+            <input type="password" id="password" required minlength="6">
+            <div class="error" id="password-error">Password must be at least 6 characters</div>
+        </div>
+        <div class="form-group">
+            <label for="contactEmail">Contact Email</label>
+            <input type="email" id="contactEmail" required>
+            <div class="error" id="contactEmail-error">Please enter a valid email</div>
+        </div>
+        <div class="form-group">
+            <label for="phone">Phone Number</label>
+            <input type="tel" id="phone" required>
+            <div class="error" id="phone-error">Please enter a valid phone number</div>
+        </div>
+        <div class="form-group">
+            <label for="restaurantName">Restaurant Name</label>
+            <input type="text" id="restaurantName" required>
+            <div class="error" id="restaurantName-error">Please enter restaurant name</div>
+        </div>
+        <div class="form-group">
+            <label for="shippingFees">Shipping Fees (MAD)</label>
+            <input type="number" id="shippingFees" required min="0" step="0.01">
+            <div class="error" id="shippingFees-error">Please enter valid shipping fees</div>
+        </div>
+        <div class="btn-container">
+            <button type="button" class="btn" id="next1">Next</button>
+        </div>
+    </form>
+    <!-- Step 2: Location -->
+    <form id="form2" class="form-step">
+        <div class="form-group">
+            <label for="street">Street Address</label>
+            <input type="text" id="street" required>
+            <div class="error" id="street-error">Please enter street address</div>
+        </div>
+        <div class="form-group">
+            <label for="region">Region</label>
+            <select id="region" required>
+                <option value="">Select Region</option>
+                <option value="1">Casablanca-Settat</option>
+                <option value="2">Rabat-Salé-Kénitra</option>
+                <option value="3">Marrakech-Safi</option>
+                <option value="4">Fès-Meknès</option>
+            </select>
+            <div class="error" id="region-error">Please select a region</div>
+        </div>
+        <div class="form-group">
+            <label for="province">Province</label>
+            <select id="province" required disabled>
+                <option value="">Select Province</option>
+            </select>
+            <div class="error" id="province-error">Please select a province</div>
+        </div>
+        <div class="form-group">
+            <label for="commune">Commune</label>
+            <select id="commune" required disabled>
+                <option value="">Select Commune</option>
+            </select>
+            <div class="error" id="commune-error">Please select a commune</div>
+        </div>
+        <div class="form-group">
+            <label>GPS Coordinates</label>
+            <div class="coordinates-container">
+                <input type="text" id="latitude" placeholder="Latitude" readonly>
+                <input type="text" id="longitude" placeholder="Longitude" readonly>
+                <button type="button" class="get-coordinates" id="getCoordinates">Get Coordinates</button>
+            </div>
+        </div>
+        <div class="btn-container">
+            <button type="button" class="btn-secondary" id="prev2">Back</button>
+            <button type="button" class="btn" id="next2">
+                <span id="submitText">Submit Registration</span>
+                <span id="submitSpinner" class="loading" style="display: none;"></span>
+            </button>
+        </div>
+    </form>
+    <!-- Step 3: Payment Setup -->
+    <form id="form3" class="form-step">
+        <div class="form-group">
+            <p>To complete your registration, you need to set up payments with Stripe. This will allow you to receive payments from customers.</p>
+            <p>You'll be redirected to Stripe to provide your business and banking details.</p>
+        </div>
+        <div class="btn-container">
+            <button type="button" class="btn-secondary" id="prev3">Back</button>
+            <button type="button" class="btn" id="completeRegistration">
+                <span id="stripeText">Setup Stripe Account</span>
+                <span id="stripeSpinner" class="loading" style="display: none;"></span>
+            </button>
+        </div>
+    </form>
+    <!-- Success Message -->
+    <div id="successMessage" class="form-step">
+        <div class="success-message">
+            <div class="success-icon">✓</div>
+            <h2>Registration Submitted!</h2>
+            <p>Your restaurant registration is pending approval.</p>
+            <p>We've sent a confirmation email to your contact address.</p>
+            <p>Our team will review your application and get back to you soon.</p>
+        </div>
+    </div>
+</div>
+<script>
+    // Initialize Stripe.js instance with your public key
+    const stripe = Stripe("pk_test_51RHm1SFWUQXfDIlGmKVLISKhH3LpY6Sf9Pp4RC62PoaUcovgWn35VVnAQ5we4xhyd2oMfqz6xjixvonrppTmTFxW000z9mc5cG");
+
+    // DOM Elements
+    const form1 = document.getElementById('form1');
+    const form2 = document.getElementById('form2');
+    const form3 = document.getElementById('form3');
+    const successMessage = document.getElementById('successMessage');
+    const step1 = document.getElementById('step1');
+    const step2 = document.getElementById('step2');
+    const step3 = document.getElementById('step3');
+    const next1 = document.getElementById('next1');
+    const prev2 = document.getElementById('prev2');
+    const next2 = document.getElementById('next2');
+    const prev3 = document.getElementById('prev3');
+    const completeRegistration = document.getElementById('completeRegistration');
+    const getCoordinates = document.getElementById('getCoordinates');
+    const latitude = document.getElementById('latitude');
+    const longitude = document.getElementById('longitude');
+    const region = document.getElementById('region');
+    const province = document.getElementById('province');
+    const commune = document.getElementById('commune');
+    const submitText = document.getElementById('submitText');
+    const submitSpinner = document.getElementById('submitSpinner');
+    const stripeText = document.getElementById('stripeText');
+    const stripeSpinner = document.getElementById('stripeSpinner');
+    // Store restaurant ID after registration
+    let restaurantId = null;
+    // Province data (simplified for demo)
+    const provinces = {
+        '1': ['Casablanca', 'Mohammedia', 'Settat', 'El Jadida'],
+        '2': ['Rabat', 'Salé', 'Kénitra', 'Skhirat'],
+        '3': ['Marrakech', 'Safi', 'El Kelaa', 'Essaouira'],
+        '4': ['Fès', 'Meknès', 'Sefrou', 'Ifrane']
+    };
+    // Commune data (simplified for demo)
+    const communes = {
+        'Casablanca': ['Ain Chock', 'Ain Sebaa', 'Anfa', 'Belvedere'],
+        'Mohammedia': ['Mohammedia Ville', 'Al Mansouria', 'Sidi Moussa'],
+        'Rabat': ['Agdal', 'Hassan', 'Yacoub El Mansour', 'Souissi'],
+        'Marrakech': ['Gueliz', 'Medina', 'Menara', 'Sidi Youssef Ben Ali']
+    };
+    // Event Listeners
+    next1.addEventListener('click', validateStep1);
+    prev2.addEventListener('click', () => showStep(1));
+    next2.addEventListener('click', submitRegistration);
+    prev3.addEventListener('click', () => showStep(2));
+    completeRegistration.addEventListener('click', completeRegistrationProcess);
+    getCoordinates.addEventListener('click', fetchCoordinates);
+    region.addEventListener('change', updateProvinces);
+    province.addEventListener('change', updateCommunes);
+    // Functions
+    function showStep(stepNumber) {
+        // Hide all forms
+        form1.classList.remove('active');
+        form2.classList.remove('active');
+        form3.classList.remove('active');
+        successMessage.classList.remove('active');
+        // Update progress bar
+        step1.classList.remove('active', 'completed');
+        step2.classList.remove('active', 'completed');
+        step3.classList.remove('active', 'completed');
+        if (stepNumber === 1) {
+            form1.classList.add('active');
+            step1.classList.add('active');
+        } else if (stepNumber === 2) {
+            form2.classList.add('active');
+            step1.classList.add('completed');
+            step2.classList.add('active');
+        } else if (stepNumber === 3) {
+            form3.classList.add('active');
+            step1.classList.add('completed');
+            step2.classList.add('completed');
+            step3.classList.add('active');
+        } else if (stepNumber === 4) {
+            successMessage.classList.add('active');
+            step1.classList.add('completed');
+            step2.classList.add('completed');
+            step3.classList.add('completed');
+        }
+    }
+    function validateStep1() {
+        const email = document.getElementById('email').value;
+        const password = document.getElementById('password').value;
+        const contactEmail = document.getElementById('contactEmail').value;
+        const phone = document.getElementById('phone').value;
+        const restaurantName = document.getElementById('restaurantName').value;
+        const shippingFees = document.getElementById('shippingFees').value;
+        let isValid = true;
+        // Simple validation
+        if (!email || !email.includes('@')) {
+            document.getElementById('email-error').style.display = 'block';
+            isValid = false;
+        } else {
+            document.getElementById('email-error').style.display = 'none';
+        }
+        if (!password || password.length < 6) {
+            document.getElementById('password-error').style.display = 'block';
+            isValid = false;
+        } else {
+            document.getElementById('password-error').style.display = 'none';
+        }
+        if (!contactEmail || !contactEmail.includes('@')) {
+            document.getElementById('contactEmail-error').style.display = 'block';
+            isValid = false;
+        } else {
+            document.getElementById('contactEmail-error').style.display = 'none';
+        }
+        if (!phone) {
+            document.getElementById('phone-error').style.display = 'block';
+            isValid = false;
+        } else {
+            document.getElementById('phone-error').style.display = 'none';
+        }
+        if (!restaurantName) {
+            document.getElementById('restaurantName-error').style.display = 'block';
+            isValid = false;
+        } else {
+            document.getElementById('restaurantName-error').style.display = 'none';
+        }
+        if (!shippingFees || isNaN(shippingFees)) {
+            document.getElementById('shippingFees-error').style.display = 'block';
+            isValid = false;
+        } else {
+            document.getElementById('shippingFees-error').style.display = 'none';
+        }
+        if (isValid) {
+            showStep(2);
+        }
+    }
+    function validateStep2() {
+        const street = document.getElementById('street').value;
+        const regionVal = region.value;
+        const provinceVal = province.value;
+        const communeVal = commune.value;
+        let isValid = true;
+        if (!street) {
+            document.getElementById('street-error').style.display = 'block';
+            isValid = false;
+        } else {
+            document.getElementById('street-error').style.display = 'none';
+        }
+        if (!regionVal) {
+            document.getElementById('region-error').style.display = 'block';
+            isValid = false;
+        } else {
+            document.getElementById('region-error').style.display = 'none';
+        }
+        if (!provinceVal) {
+            document.getElementById('province-error').style.display = 'block';
+            isValid = false;
+        } else {
+            document.getElementById('province-error').style.display = 'none';
+        }
+        if (!communeVal) {
+            document.getElementById('commune-error').style.display = 'block';
+            isValid = false;
+        } else {
+            document.getElementById('commune-error').style.display = 'none';
+        }
+        return isValid;
+    }
+    function submitRegistration() {
+        if (!validateStep2()) return;
+        // Show loading state
+        submitText.style.display = 'none';
+        submitSpinner.style.display = 'inline-block';
+        next2.disabled = true;
+        // Prepare data for API
+        const registrationData = {
+            email: document.getElementById('email').value,
+            password: document.getElementById('password').value,
+            contactEmail: document.getElementById('contactEmail').value,
+            phone: document.getElementById('phone').value,
+            restaurantName: document.getElementById('restaurantName').value,
+            shippingFees: parseFloat(document.getElementById('shippingFees').value),
+            addressRegistrationBody: {
+                title: "Restaurant Address",
+                street: document.getElementById('street').value,
+                regionID: parseInt(region.value),
+                provinceID: province.selectedIndex, // Simplified for demo
+                communeID: commune.selectedIndex,   // Simplified for demo
+                latitude: latitude.value || null,
+                longitude: longitude.value || null,
+                isDefault: true,
+                isCoordinationActivated: Boolean(latitude.value && longitude.value)
+            }
+        };
+        // Send to registration endpoint
+        fetch('http://localhost:8080/auth/restaurant/register', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(registrationData)
+        })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Registration failed');
+                }
+                return response.json();
+            })
+            .then(data => {
+                // Store the restaurant ID for the next step
+                restaurantId = data;
+                // Proceed to payment setup step
+                showStep(3);
+            })
+            .catch(error => {
+                console.error('Registration error:', error);
+                alert('Registration failed. Please try again.');
+            })
+            .finally(() => {
+                // Reset loading state
+                submitText.style.display = 'inline';
+                submitSpinner.style.display = 'none';
+                next2.disabled = false;
+            });
+    }
+    function completeRegistrationProcess() {
+        if (!restaurantId) {
+            alert('Registration incomplete. Please start over.');
+            return;
+        }
+        // Show loading state
+        stripeText.style.display = 'none';
+        stripeSpinner.style.display = 'inline-block';
+        completeRegistration.disabled = true;
+        // Call the payment setup endpoint with the restaurant ID
+        fetch(`http://localhost:8080/auth/restaurant/register/${restaurantId}/payment`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Payment setup failed');
+                }
+                return response.json();
+            })
+            .then(data => {
+                // In a real app, we would redirect to the onboarding URL
+                // For demo, we'll simulate opening in a new tab
+                console.log('Onboarding URL:', data.onboardingUrl);
+                window.open(data.onboardingUrl, '_blank');
+                // Show a success message after a delay to simulate processing
+                setTimeout(() => {
+                    showStep(4);
+                }, 1500);
+            })
+            .catch(error => {
+                console.error('Payment setup error:', error);
+                alert('Payment setup failed. Please try again.');
+            })
+            .finally(() => {
+                // Reset loading state
+                stripeText.style.display = 'inline';
+                stripeSpinner.style.display = 'none';
+                completeRegistration.disabled = false;
+            });
+    }
+    function fetchCoordinates() {
+        // Simulate getting GPS coordinates
+        const randomLat = (Math.random() * 0.02 + 33.59).toFixed(6);
+        const randomLng = (Math.random() * 0.02 + -7.62).toFixed(6);
+        latitude.value = randomLat;
+        longitude.value = randomLng;
+    }
+    function updateProvinces() {
+        const selectedRegion = region.value;
+        province.innerHTML = '<option value="">Select Province</option>';
+        commune.innerHTML = '<option value="">Select Commune</option>';
+        if (selectedRegion) {
+            province.disabled = false;
+            provinces[selectedRegion].forEach(prov => {
+                const option = document.createElement('option');
+                option.value = prov;
+                option.textContent = prov;
+                province.appendChild(option);
+            });
+        } else {
+            province.disabled = true;
+            commune.disabled = true;
+        }
+    }
+    function updateCommunes() {
+        const selectedProvince = province.value;
+        commune.innerHTML = '<option value="">Select Commune</option>';
+        if (selectedProvince && communes[selectedProvince]) {
+            commune.disabled = false;
+            communes[selectedProvince].forEach(com => {
+                const option = document.createElement('option');
+                option.value = com;
+                option.textContent = com;
+                commune.appendChild(option);
+            });
+        } else {
+            commune.disabled = true;
+        }
+    }
+</script>
+</body>
+</html>
