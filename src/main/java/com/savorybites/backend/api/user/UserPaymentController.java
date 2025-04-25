@@ -26,6 +26,7 @@ public class UserPaymentController {
     @PostMapping("/setupIntent")
     public ResponseEntity<?> createSetupIntent(@AuthenticationPrincipal LocalUser user) throws StripeException {
         String clientSecret = stripeService.createSetupIntent(user);
+        System.out.println("niya tsaftat : "+clientSecret);
         return ResponseEntity.ok(Map.of("clientSecret", clientSecret));
     }
 
@@ -38,10 +39,14 @@ public class UserPaymentController {
             @AuthenticationPrincipal LocalUser user,
             @RequestBody Map<String, String> request
     ) throws StripeException {
+        System.out.println("niya twslat bdina nsaviw : "+request.get("paymentMethodId"));
+
         String paymentMethodId = request.get("paymentMethodId");
         if (paymentMethodId == null || paymentMethodId.isBlank()) {
             return ResponseEntity.badRequest().body("Missing paymentMethodId");
         }
+        System.out.println("ngolo bsmlah");
+
         stripeService.savePaymentMethod(user, paymentMethodId);
         return ResponseEntity.ok("Card saved successfully");
     }

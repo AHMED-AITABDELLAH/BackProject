@@ -31,15 +31,17 @@ public class StripeService {
     private final RestaurantRepository restaurantRepository;
 
     /**User Logic**/
-    public String createOrGetStripeCustomer(LocalUser user) throws StripeException {
+    private String createOrGetStripeCustomer(LocalUser user) throws StripeException {
         // Check if any payment method exists for the user
         Optional<PlatformPaymentMethod> existing = platformPaymentMethodRepository
                 .findFirstByUserOrderByIdAsc(user);
 
         if (existing.isPresent()) {
+            System.out.println("We get the existing one");
             return existing.get().getStripeCustomerId();
         }
 
+        System.out.println("We create new one :((((");
         Customer customer = Customer.create(CustomerCreateParams.builder()
                 .setEmail(user.getEmail()).build());
 
@@ -59,13 +61,13 @@ public class StripeService {
 
     @Transactional
     public void savePaymentMethod(LocalUser user, String paymentMethodId) throws StripeException {
+        System.out.println("1");
         String customerId = createOrGetStripeCustomer(user);
+        System.out.println("2");
 
         PaymentMethod paymentMethod = PaymentMethod.retrieve(paymentMethodId);
-        paymentMethod.attach(PaymentMethodAttachParams.builder()
-                .setCustomer(customerId)
-                .build());
 
+        System.out.println("3");
         PlatformPaymentMethod clientPm = new PlatformPaymentMethod();
         clientPm.setUser(user);
         clientPm.setStripeCustomerId(customerId);
@@ -74,11 +76,16 @@ public class StripeService {
         clientPm.setLast4(paymentMethod.getCard().getLast4());
         clientPm.setExpMonth(paymentMethod.getCard().getExpMonth());
         clientPm.setExpYear(paymentMethod.getCard().getExpYear());
+        System.out.println("salina lhfla");
+
 
         boolean hasDefault = platformPaymentMethodRepository.existsByUserAndIsDefaultTrue(user);
         clientPm.setIsDefault(!hasDefault); // First card = default
 
+
         platformPaymentMethodRepository.save(clientPm);
+        System.out.println("raho tma");
+
     }
 
     public List<PlatformPaymentMethod> getPaymentMethods(LocalUser user) {
