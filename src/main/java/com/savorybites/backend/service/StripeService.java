@@ -10,9 +10,12 @@ import com.stripe.model.*;
 import com.stripe.param.*;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.apache.catalina.connector.Request;
+import org.apache.catalina.connector.Response;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.ErrorResponse;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
@@ -23,10 +26,8 @@ import java.util.Optional;
 public class StripeService {
 
 
-    @Value("${app.stripe.return-url}")
-    private String returnUrl;
-    @Value("${app.stripe.refresh-url}")
-    private String refreshUrl;
+    @Value("${app.frontend.url}")
+    private String frontUrl;
     private final PlatformPaymentMethodRepository platformPaymentMethodRepository;
     private final RestaurantRepository restaurantRepository;
 
@@ -120,6 +121,8 @@ public class StripeService {
 
     /**Restaurant Logic**/
 
+    /*
+
     @Transactional
     public String createExpressAccountAndOnboardingLink(Restaurant restaurant) throws StripeException {
 
@@ -160,4 +163,26 @@ public class StripeService {
 
         return link.getUrl(); // Send this to the frontend to redirect the restaurant
     }
+
+*/
+
+
+    public String createAccount() throws StripeException {
+        Account account = Account.create(AccountCreateParams.builder().build());
+        return account.getId();
+    }
+
+    public String createAccountLink(String accountId) throws StripeException {
+        AccountLink accountLink = AccountLink.create(
+                AccountLinkCreateParams.builder()
+                        .setAccount(accountId)
+                        .setReturnUrl(frontUrl +"/restaurant/stripe/" + accountId +"/return")
+                        .setRefreshUrl(frontUrl +"/auth/restaurant/stripe/" + accountId +"/refresh")
+                        .setType(AccountLinkCreateParams.Type.ACCOUNT_ONBOARDING)
+                        .build()
+        );
+        return accountLink.getUrl();
+    }
+
+
 }
