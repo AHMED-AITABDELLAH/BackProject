@@ -1,6 +1,5 @@
 package com.savorybites.backend.repository;
 
-import com.savorybites.backend.api.dto.user.UserDTO;
 import com.savorybites.backend.model.LocalUser;
 import com.savorybites.backend.model.OrderStatus;
 import com.savorybites.backend.model.Orders;
@@ -139,4 +138,6 @@ public interface OrdersRepository extends JpaRepository<Orders, Long> {
             FETCH FIRST 3 ROWS ONLY
             """, nativeQuery = true)
     List<Orders> findTop3ExpensiveOrdersByRestaurant(@Param("restaurantId") Long restaurantId);
+
+    Optional<Orders> findByPaymentIntentId(String paymentIntentId);
 }

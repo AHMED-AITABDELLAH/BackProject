@@ -2,10 +2,14 @@ package com.savorybites.backend.service;
 
 import com.savorybites.backend.api.dto.Order.TrackingDataDTO;
 import com.savorybites.backend.model.*;
-import com.savorybites.backend.repository.CartItemRepository;
-import com.savorybites.backend.repository.OrderItemRepository;
-import com.savorybites.backend.repository.OrdersRepository;
-import com.savorybites.backend.repository.TrackingDataRepository;
+import com.savorybites.backend.repository.*;
+import com.stripe.exception.StripeException;
+import com.stripe.model.PaymentIntent;
+import com.stripe.model.Refund;
+import com.stripe.net.RequestOptions;
+import com.stripe.param.PaymentIntentCreateParams;
+import com.stripe.param.RefundCreateParams;
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -30,11 +34,12 @@ public class OrdersService {
     private final SimpMessagingTemplate messagingTemplate;
     private final EmailService emailService;
     private final TrackingDataRepository trackingDataRepository;
+    private final PlatformPaymentMethodRepository platformPaymentMethodRepository;
 
     public OrdersService(CartService cartService,
                          OrdersRepository ordersRepository,
                          CartItemRepository cartItemRepository,
-                         AddressService addressService, OrderItemRepository orderItemRepository, UserService userService, SimpMessagingTemplate messagingTemplate, EmailService emailService, TrackingDataRepository trackingDataRepository) {
+                         AddressService addressService, OrderItemRepository orderItemRepository, UserService userService, SimpMessagingTemplate messagingTemplate, EmailService emailService, TrackingDataRepository trackingDataRepository, PlatformPaymentMethodRepository platformPaymentMethodRepository) {
         this.cartService = cartService;
         this.ordersRepository = ordersRepository;
         this.cartItemRepository = cartItemRepository;
@@ -44,6 +49,18 @@ public class OrdersService {
         this.messagingTemplate = messagingTemplate;
         this.emailService = emailService;
         this.trackingDataRepository = trackingDataRepository;
+        this.platformPaymentMethodRepository = platformPaymentMethodRepository;
+    }
+
+    public void refundPaymentIntent(String paymentIntentId) {
+        try {
+            RefundCreateParams refundParams = RefundCreateParams.builder()
+                    .setPaymentIntent(paymentIntentId)
+                    .build();
+            Refund.create(refundParams);
+        } catch (StripeException e) {
+            throw new RuntimeException("Stripe Refund failed: " + e.getMessage());
+        }
     }
 
 
@@ -119,7 +136,7 @@ public class OrdersService {
         return ResponseEntity.ok().build();
     }
 
-    public ResponseEntity<String> continueCheckout(LocalUser user,long addressID,long orderID) {
+    public ResponseEntity<String> continueCheckout(LocalUser user,long addressID,long orderID,long paymentMethodID) {
 
             Orders order = ordersRepository.findById(orderID)
                     .orElseThrow(() -> new IllegalArgumentException("Order not found"));
@@ -134,22 +151,44 @@ public class OrdersService {
 
             // Assign address and payment method
             order.setDeliveryAddress(addressService.getAddress(user,addressID));
-            //TODO PAYMENT
 
-            order.setStatus(OrderStatus.COMPLETED);
+            PlatformPaymentMethod paymentMethod = platformPaymentMethodRepository
+                    .findByIdAndUser(paymentMethodID,user).orElseThrow(
+                            ()-> new EntityNotFoundException("No payment method with that id.")
+                    );
+            //create and charge the user for the order
+            try {
+                PaymentIntentCreateParams params = PaymentIntentCreateParams.builder()
+                        .setAmount((long) (order.getTotalPrice() * 100))
+                        .setCurrency("mad")
+                        .setCustomer(paymentMethod.getStripeCustomerId())
+                        .setPaymentMethod(paymentMethod.getStripePaymentMethodId())
+                        .setConfirm(true)
+                        .setOffSession(true)
+                        .putMetadata("orderId", order.getId().toString())
+                        .setTransferData(
+                                PaymentIntentCreateParams.TransferData.builder()
+                                        .setDestination(order.getRestaurant().getStripeAccountId())
+                                        .build()
+                        )
+                        .build();
+                RequestOptions requestOptions = RequestOptions.builder()
+                        .setStripeAccount(order.getRestaurant().getStripeAccountId()) // IMPORTANT
+                        .build();
 
+                PaymentIntent intent = PaymentIntent.create(params, requestOptions);
+
+                order.setPaymentIntentId(intent.getId());
+            } catch (StripeException e) {
+                throw new RuntimeException("Stripe PaymentIntent failed: " + e.getMessage());
+            }
             ordersRepository.save(order);
 
             TrackingData trackingData=trackingDataRepository.findByOrder(order).orElseThrow();
             trackingData.setCompletedAt(LocalDateTime.now());
             trackingDataRepository.save(trackingData);
-            //Send Notification to the restaurant
-            Long restaurantId = order.getRestaurant().getId();
-            // You might want to customize the payload (full order, DTO, just IDs, etc)
-            messagingTemplate.convertAndSend(
-                    "/topic/restaurant/" + restaurantId + "/orders",
-                    "New Order has arrived (ID : "+order.getId()+")");
-            return ResponseEntity.ok("Your Order is completed successfully.");
+
+            return ResponseEntity.ok().build();
         }
 
     public List<Orders> getPlacedOrders(LocalUser user){
@@ -171,12 +210,18 @@ public class OrdersService {
     public boolean cancelOrder(LocalUser user,long orderID){
         Orders order=getManagedOrder(user,orderID);
         if(order.getStatus()==OrderStatus.UNCOMPLETED || order.getStatus()==OrderStatus.COMPLETED) {
+            refundPaymentIntent(order.getPaymentIntentId());
             order.setStatus(OrderStatus.CANCELLED);
             emailService.sendOrderCancelledByUserEmail(user.getUsername(),user.getEmail(),orderID);
             messagingTemplate.convertAndSend(
                     "/topic/restaurant/" + order.getRestaurant().getId() + "/orders",
-                    "Order (ID : " + order.getId() + ") has been cancel by the user");
-            //TODO TREATING THE REFUND
+                    "Order (ID: " + order.getId() + ") was cancelled by the user. The payment has been refunded automatically."
+            );
+            messagingTemplate.convertAndSend(
+                    "/topic/user/" + order.getUser().getId() + "/orders",
+                    "Your order (ID: " + order.getId() + ") has been successfully cancelled. A full refund has been issued to your payment method."
+            );
+
             return true;
         }
         return false;
@@ -256,15 +301,18 @@ public class OrdersService {
         return ResponseEntity.ok().build();
     }
 
+    @Transactional
     public ResponseEntity<?> rejectOrder(Restaurant restaurant, long orderID) {
         Orders order = ordersRepository.findByIdAndRestaurant(orderID, restaurant).orElseThrow();
         if (order.getStatus() != OrderStatus.COMPLETED)
             ResponseEntity.status(HttpStatus.BAD_REQUEST).body("You can't decline this order.");
         order.setStatus(OrderStatus.REJECTED);
+        refundPaymentIntent(order.getPaymentIntentId());
         ordersRepository.save(order);
         messagingTemplate.convertAndSend(
                 "/topic/user/" + order.getUser().getId() + "/ordersUpdate",
-                "Your Order (ID : " + order.getId() + ") has been rejected by the restaurant");
+                "Your order (ID: " + order.getId() + ") has been rejected by the restaurant. A full refund has been issued to your payment method."
+        );
         emailService.sendOrderRejectedByRestaurantEmail(
                 order.getUser().getUsername(),
                 order.getUser().getEmail(),
@@ -273,6 +321,7 @@ public class OrdersService {
         return ResponseEntity.ok("Order is Rejected successfully.");
     }
 
+    @Transactional
     public ResponseEntity<?> acceptOrder(Restaurant restaurant, long orderID) {
         Orders order = ordersRepository.findByIdAndRestaurant(orderID, restaurant).orElseThrow();
         if (order.getStatus() != OrderStatus.COMPLETED)
@@ -299,4 +348,42 @@ public class OrdersService {
         TrackingData trackingData = trackingDataRepository.findByOrder(order).orElseThrow();
         return new TrackingDataDTO(order,trackingData);
     }
+
+
+
+
+
+    public void markOrderAsPaidFromWebhook(String orderId) {
+        long id = Long.parseLong(orderId);
+        Orders order = ordersRepository.findById(id).orElse(null);
+        if (order != null && order.getStatus() == OrderStatus.UNCOMPLETED) {
+            order.setStatus(OrderStatus.COMPLETED);
+            ordersRepository.save(order);
+            messagingTemplate.convertAndSend(
+                    "/topic/user/" + order.getUser().getId() + "/ordersUpdate",
+                    "Your payment for Order ID " + order.getId() + " was successful.");
+        }
+    }
+
+    public void handlePaymentFailure(String paymentIntentId) {
+        Orders order = ordersRepository.findByPaymentIntentId(paymentIntentId).orElse(null);
+        if (order != null && order.getStatus() == OrderStatus.UNCOMPLETED) {
+            order.setStatus(OrderStatus.CANCELLED);
+            ordersRepository.save(order);
+            messagingTemplate.convertAndSend(
+                    "/topic/user/" + order.getUser().getId() + "/ordersUpdate",
+                    "Payment for your Order ID " + order.getId() + " failed. The order has been cancelled.");
+        }
+    }
+
+    public void handleRefundNotification(String paymentIntentId) {
+        Orders order = ordersRepository.findByPaymentIntentId(paymentIntentId).orElse(null);
+        if (order != null) {
+            ordersRepository.save(order);
+            messagingTemplate.convertAndSend(
+                    "/topic/user/" + order.getUser().getId() + "/ordersUpdate",
+                    "Your refund for Order ID " + order.getId() + " was processed.");
+        }
+    }
+
 }

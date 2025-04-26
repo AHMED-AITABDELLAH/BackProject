@@ -95,7 +95,9 @@ public class UserService {
         cartService.createCart(newUser);
         verificationTokenRepository.save(verificationToken);
     }
+
     /// //////////Generating verification JWT upon Registering/Login////////////////////////
+    ///
     private VerificationToken createVerificationToken(LocalUser user){
         VerificationToken verificationToken = new VerificationToken();
         verificationToken.setToken(jwtService.generateVerificationJWT(user));
@@ -105,6 +107,7 @@ public class UserService {
     }
 
     /// ////////////////////////////Generating  Password Reset Token //////////////////////////////
+    ///
     private PasswordResetToken createPasswordResetToken(LocalUser user){
         Optional<PasswordResetToken> opToken =passwordResetTokenRepository.findFirstByUserOrderByExpiryDateDesc(user);
         if(opToken.isPresent()){
@@ -123,6 +126,7 @@ public class UserService {
         return passwordResetToken;
 
     }
+
     /// //////////////////////////forgot Password/////////////////////////////////
     public void forgotPassword(String email)
             throws UserNotVerified, UserNotFoundException, EmailAlreadySentException {
@@ -189,8 +193,7 @@ public class UserService {
     /////////////////////////////////////////////LOGIN///////////////////////////////////////////
 
 
-    public String Login(LoginBody loginBody)//The logic for the login
-    //we get the email passed by the login body
+    public String Login(LoginBody loginBody)
             throws BadCredentialsException, UserNotFoundException, UserNotVerified {
         Optional<LocalUser> userOp = userRepository.findByEmailIgnoreCase(loginBody.getEmail());
         //if the User exists
@@ -230,7 +233,8 @@ public class UserService {
 
 
     }
-/// ////////////////////////////Updating Data/////////////////////////////////////////////
+
+    ////////////////////////////Updating Data/////////////////////////////////////////////
 
     public ResponseEntity<Object> update(LocalUser user, UserDetailsBody userDetailsBody){
 
@@ -269,6 +273,7 @@ public class UserService {
     }
 
     /// ////////////////////////////////////////////////////////////////
+    ///
     public LocalUser getManagedUser(LocalUser user){
         Optional<LocalUser> optionalUser=userRepository.findLocalUserById(user.getId());
         if(optionalUser.isPresent())

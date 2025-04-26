@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Checkout - Select Address and Payment</title>
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: #f9f9f9;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .checkout-container {
+            background: #fff;
+            border-radius: 16px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            padding: 30px;
+            width: 100%;
+            max-width: 500px;
+        }
+
+        h2 {
+            margin-bottom: 20px;
+            color: #333;
+            font-size: 24px;
+            text-align: center;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #555;
+        }
+
+        select {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 20px;
+            border-radius: 12px;
+            border: 1px solid #ccc;
+            background-color: #fdfdfd;
+            font-size: 16px;
+            appearance: none;
+            background-image: url('data:image/svg+xml;utf8,<svg fill="%23999" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg"><path d="M7 10l5 5 5-5z"/></svg>');
+            background-repeat: no-repeat;
+            background-position-x: 98%;
+            background-position-y: 50%;
+        }
+
+        .checkout-button {
+            background-color: #FD4C2A;
+            color: white;
+            border: none;
+            padding: 14px;
+            width: 100%;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .checkout-button:hover {
+            background-color: #e04224;
+        }
+    </style>
+</head>
+<body>
+
+<div class="checkout-container">
+    <h2>Checkout</h2>
+
+    <form id="checkout-form">
+        <div>
+            <label for="address">Select Delivery Address</label>
+            <select id="address" name="address" required>
+                <option value="">-- Select an address --</option>
+                <option value="1">123 Main Street, Casablanca</option>
+                <option value="2">45 Rue des Roses, Rabat</option>
+                <!-- Dynamically fill options here -->
+            </select>
+        </div>
+
+        <div>
+            <label for="payment">Select Payment Method</label>
+            <select id="payment" name="payment" required>
+                <option value="">-- Select a card --</option>
+                <option value="pm_123456">Visa **** 4242</option>
+                <option value="pm_789101">Mastercard **** 8888</option>
+                <!-- Dynamically fill options here -->
+            </select>
+        </div>
+
+        <button type="submit" class="checkout-button">Continue to Payment</button>
+    </form>
+
+</div>
+
+</body>
+</html>

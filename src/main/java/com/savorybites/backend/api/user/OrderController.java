@@ -42,10 +42,10 @@ public class OrderController {
     @PutMapping("/placedOrders/{orderID}/checkout")
     public ResponseEntity<String> continueCheckout(@AuthenticationPrincipal LocalUser user,
                                                    @PathVariable long orderID,
-                                                   @RequestParam long addressID)
-                                                   //TODO PAYMENT ID
+                                                   @RequestParam long addressID,
+                                                   @RequestParam long paymentMethodID)
     {
-        return ordersService.continueCheckout(user,addressID,orderID);
+        return ordersService.continueCheckout(user,addressID,orderID,paymentMethodID);
     }
 
     @GetMapping("/placedOrders/{orderID}/orderItems")
