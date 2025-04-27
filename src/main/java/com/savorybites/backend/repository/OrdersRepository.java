@@ -35,7 +35,7 @@ public interface OrdersRepository extends JpaRepository<Orders, Long> {
               TO_CHAR(o.ORDER_DATE, 'IYYY-"W"IW') AS week_label,
               COUNT(CASE WHEN o.status = 'DELIVERED' THEN 1 END) AS deliveredOrdersCount,
               COUNT(CASE WHEN o.status = 'CANCELLED' THEN 1 END) AS canceledOrdersCount,
-              COUNT(CASE WHEN o.status = 'DECLINED' THEN 1 END) AS declinedOrdersCount
+              COUNT(CASE WHEN o.status = 'REJECTED' THEN 1 END) AS declinedOrdersCount
             FROM orders o
             WHERE o.restaurant_id = :restaurantId
             GROUP BY TO_CHAR(o.ORDER_DATE, 'IYYY-"W"IW')
@@ -140,4 +140,6 @@ public interface OrdersRepository extends JpaRepository<Orders, Long> {
     List<Orders> findTop3ExpensiveOrdersByRestaurant(@Param("restaurantId") Long restaurantId);
 
     Optional<Orders> findByPaymentIntentId(String paymentIntentId);
+
+    Optional<Orders> findByChargeId(String chargeId);
 }

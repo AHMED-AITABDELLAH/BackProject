@@ -6,21 +6,28 @@ import com.savorybites.backend.repository.*;
 import com.stripe.exception.StripeException;
 import com.stripe.model.PaymentIntent;
 import com.stripe.model.Refund;
+import com.stripe.model.Transfer;
+import com.stripe.model.TransferReversal;
+import com.stripe.model.tax.Transaction;
 import com.stripe.net.RequestOptions;
 import com.stripe.param.PaymentIntentCreateParams;
 import com.stripe.param.RefundCreateParams;
+import com.stripe.param.TransferCreateParams;
+import com.stripe.param.TransferReversalCreateParams;
+import com.stripe.service.TransferReversalService;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
+@RequiredArgsConstructor
 @Service
 public class OrdersService {
 
@@ -36,22 +43,6 @@ public class OrdersService {
     private final TrackingDataRepository trackingDataRepository;
     private final PlatformPaymentMethodRepository platformPaymentMethodRepository;
 
-    public OrdersService(CartService cartService,
-                         OrdersRepository ordersRepository,
-                         CartItemRepository cartItemRepository,
-                         AddressService addressService, OrderItemRepository orderItemRepository, UserService userService, SimpMessagingTemplate messagingTemplate, EmailService emailService, TrackingDataRepository trackingDataRepository, PlatformPaymentMethodRepository platformPaymentMethodRepository) {
-        this.cartService = cartService;
-        this.ordersRepository = ordersRepository;
-        this.cartItemRepository = cartItemRepository;
-        this.addressService = addressService;
-        this.orderItemRepository = orderItemRepository;
-        this.userService = userService;
-        this.messagingTemplate = messagingTemplate;
-        this.emailService = emailService;
-        this.trackingDataRepository = trackingDataRepository;
-        this.platformPaymentMethodRepository = platformPaymentMethodRepository;
-    }
-
     public void refundPaymentIntent(String paymentIntentId) {
         try {
             RefundCreateParams refundParams = RefundCreateParams.builder()
@@ -63,6 +54,22 @@ public class OrdersService {
         }
     }
 
+    public Refund refundFullCharge(String chargeId) throws StripeException {
+        RefundCreateParams params = RefundCreateParams.builder()
+                .setCharge(chargeId)
+                .build();
+        return Refund.create(params);
+    }
+    public Transfer reverseTransfer(String transferId, String connectedAccountId) throws StripeException {
+        // RequestOptions for Stripe Connect (if applicable)
+        RequestOptions requestOptions = RequestOptions.builder()
+                .setStripeAccount(connectedAccountId) // For connected restaurant account
+                .build();
+
+        // Retrieve and cancel the transfer
+        Transfer transfer = Transfer.retrieve(transferId, requestOptions);
+        return transfer.cancel();
+    }
 
     /*User Exclusive*/
 
@@ -121,17 +128,20 @@ public class OrdersService {
             TrackingData trackingData = new TrackingData();
             trackingData.setOrder(order);
             trackingDataRepository.save(trackingData);
+
+            //Alert the user that he has orders to complete
+            messagingTemplate.convertAndSend(
+                    "/topic/user/" + user.getId() + "/orders",
+                    "Your Order (ID: " + order.getId() + ") have been created." +
+                            "\nPlease proceed to checkout to complete your purchases."
+            );
+
         }
         // Clear cart
         cartItemRepository.deleteAll(cartItemList);
 
 
-        //Alert the user that he has orders to complete
-        messagingTemplate.convertAndSend(
-                "/topic/user/" + user.getId() + "/orders",
-                "Your orders have been created." +
-                        "\nPlease proceed to checkout to complete your purchases."
-        );
+
 
         return ResponseEntity.ok().build();
     }
@@ -164,32 +174,27 @@ public class OrdersService {
                 PaymentIntentCreateParams params = PaymentIntentCreateParams.builder()
                         .setAmount(amount)
                         .setCurrency("mad")
-                        .setApplicationFeeAmount(fee)
                         .setCustomer(paymentMethod.getStripeCustomerId())
-                        .setPaymentMethod(paymentMethod.getStripePaymentMethodId())
                         .addPaymentMethodType("card")
+                        .setPaymentMethod(paymentMethod.getStripePaymentMethodId())
                         .setConfirm(true)
                         .setOffSession(true)
                         .putMetadata("orderId", order.getId().toString())
-                        .setTransferData(
-                                PaymentIntentCreateParams.TransferData.builder()
-                                        .setDestination(order.getRestaurant().getStripeAccountId())
-                                        .build()
-                        )
+                        .setApplicationFeeAmount(fee)
+                        .setCaptureMethod(PaymentIntentCreateParams.CaptureMethod.AUTOMATIC)
+                        //.setTransferData(
+                        //        PaymentIntentCreateParams.TransferData.builder()
+                        //                .setDestination(order.getRestaurant().getStripeAccountId())
+                        //                .build()
+                        //)
                         .build();
 
-
                 PaymentIntent intent = PaymentIntent.create(params);
+                ordersRepository.save(order);
 
                 order.setPaymentIntentId(intent.getId());
-            } catch (StripeException e) {
-                throw new RuntimeException("Stripe PaymentIntent failed: " + e.getMessage());
-            }
-            ordersRepository.save(order);
+            } catch (StripeException e){throw new RuntimeException("Stripe PaymentIntent failed: " + e.getMessage());}
 
-            TrackingData trackingData=trackingDataRepository.findByOrder(order).orElseThrow();
-            trackingData.setCompletedAt(LocalDateTime.now());
-            trackingDataRepository.save(trackingData);
 
             return ResponseEntity.ok().build();
         }
@@ -213,8 +218,12 @@ public class OrdersService {
     public boolean cancelOrder(LocalUser user,long orderID){
         Orders order=getManagedOrder(user,orderID);
         if(order.getStatus()==OrderStatus.UNCOMPLETED || order.getStatus()==OrderStatus.COMPLETED) {
+
             refundPaymentIntent(order.getPaymentIntentId());
             order.setStatus(OrderStatus.CANCELLED);
+
+
+
             emailService.sendOrderCancelledByUserEmail(user.getUsername(),user.getEmail(),orderID);
             messagingTemplate.convertAndSend(
                     "/topic/restaurant/" + order.getRestaurant().getId() + "/orders",
@@ -227,6 +236,7 @@ public class OrdersService {
 
             return true;
         }
+
         return false;
     }
 
@@ -305,12 +315,13 @@ public class OrdersService {
     }
 
     @Transactional
-    public ResponseEntity<?> rejectOrder(Restaurant restaurant, long orderID) {
+    public ResponseEntity<?> rejectOrder(Restaurant restaurant, long orderID) throws StripeException {
         Orders order = ordersRepository.findByIdAndRestaurant(orderID, restaurant).orElseThrow();
         if (order.getStatus() != OrderStatus.COMPLETED)
             ResponseEntity.status(HttpStatus.BAD_REQUEST).body("You can't decline this order.");
         order.setStatus(OrderStatus.REJECTED);
-        refundPaymentIntent(order.getPaymentIntentId());
+        //refund the charges
+        Refund refund = refundFullCharge(order.getChargeId());
         ordersRepository.save(order);
         messagingTemplate.convertAndSend(
                 "/topic/user/" + order.getUser().getId() + "/ordersUpdate",
@@ -331,6 +342,18 @@ public class OrdersService {
             ResponseEntity.status(HttpStatus.BAD_REQUEST).body("You can't accept this order.");
         order.setStatus(OrderStatus.ACCEPTED);
         ordersRepository.save(order);
+
+        long amount = (long) (order.getTotalPrice() * 100);
+        long fee=(long)(amount*0.1);
+
+        //transfer the money
+        TransferCreateParams.builder()
+                .setAmount(amount-fee)
+                .setCurrency("mad")
+                .setDestination(order.getRestaurant().getStripeAccountId())
+                .setSourceTransaction(order.getChargeId())
+                .build();
+
         TrackingData trackingData=trackingDataRepository.findByOrder(order).orElseThrow();
         trackingData.setAcceptedAt(LocalDateTime.now());
         trackingDataRepository.save(trackingData);
@@ -356,7 +379,7 @@ public class OrdersService {
 
 
 
-    public void markOrderAsPaidFromWebhook(String orderId) {
+    /*public void markOrderAsPaidFromWebhook(String orderId) {
         long id = Long.parseLong(orderId);
         Orders order = ordersRepository.findById(id).orElse(null);
         if (order != null && order.getStatus() == OrderStatus.UNCOMPLETED) {
@@ -387,6 +410,6 @@ public class OrdersService {
                     "/topic/user/" + order.getUser().getId() + "/ordersUpdate",
                     "Your refund for Order ID " + order.getId() + " was processed.");
         }
-    }
+    }*/
 
 }

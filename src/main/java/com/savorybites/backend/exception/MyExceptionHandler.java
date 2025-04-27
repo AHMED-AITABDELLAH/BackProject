@@ -3,6 +3,7 @@ package com.savorybites.backend.exception;
 import com.auth0.jwt.exceptions.JWTDecodeException;
 import com.savorybites.backend.exception.user.*;
 import com.savorybites.backend.service.LoginAttemptService;
+import com.stripe.exception.StripeException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -24,9 +25,9 @@ public class MyExceptionHandler extends ResponseEntityExceptionHandler {
     }
 
     //HANDLING ANY ERROR
-    @ExceptionHandler(value = {Exception.class})
+    @ExceptionHandler(value = {RuntimeException.class})
     public ResponseEntity<Object> handleAnyException
-            (Exception exception)
+            (RuntimeException exception)
     {
         String errorMsgDesc=exception.getLocalizedMessage();
         if(errorMsgDesc==null) errorMsgDesc=exception.toString();
@@ -53,6 +54,22 @@ public class MyExceptionHandler extends ResponseEntityExceptionHandler {
                 errorMessage,new HttpHeaders(), HttpStatus.CONFLICT
         );
     }
+
+    //HANDLING UserAlreadyExistsException
+    @ExceptionHandler(value = {StripeException.class})
+    public ResponseEntity<Object> stripeHandler
+    (StripeException exception)
+    {
+        String errorMsgDesc=exception.getLocalizedMessage();
+        if(errorMsgDesc==null) errorMsgDesc=exception.toString();
+        ErrorMessage errorMessage = new ErrorMessage(errorMsgDesc,new Date());
+
+
+        return new ResponseEntity<>(
+                errorMessage,new HttpHeaders(), HttpStatus.BAD_REQUEST
+        );
+    }
+
 
     //HANDLING UserNotFoundException
     @ExceptionHandler(value = {UserNotFoundException.class})
