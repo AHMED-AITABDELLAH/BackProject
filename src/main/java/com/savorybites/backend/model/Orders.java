@@ -51,9 +51,6 @@ public class Orders {
     @Column(name="payment_intent_id")
     private String paymentIntentId;
 
-    @Column(name="charge_id")
-    private String chargeId;
-
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
     private OrderStatus status = OrderStatus.UNCOMPLETED;
