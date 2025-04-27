@@ -104,17 +104,16 @@ public class OrdersService {
             TrackingData trackingData = new TrackingData();
             trackingData.setOrder(order);
             trackingDataRepository.save(trackingData);
+
+            //Alert the user that he has orders to complete
+            messagingTemplate.convertAndSend(
+                    "/topic/user/" + user.getId() + "/orders",
+                    "Your Order (ID: " + order.getId() + ") have been created." +
+                            "\nPlease proceed to checkout to complete your purchases."
+            );
         }
         // Clear cart
         cartItemRepository.deleteAll(cartItemList);
-
-
-        //Alert the user that he has orders to complete
-        messagingTemplate.convertAndSend(
-                "/topic/user/" + user.getId() + "/orders",
-                "Your orders have been created." +
-                        "\nPlease proceed to checkout to complete your purchases."
-        );
 
         return ResponseEntity.ok().build();
     }
