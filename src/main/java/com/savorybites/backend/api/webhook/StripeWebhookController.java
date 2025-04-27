@@ -3,12 +3,14 @@ package com.savorybites.backend.api.webhook;
 import com.savorybites.backend.model.OrderStatus;
 import com.savorybites.backend.model.Orders;
 import com.savorybites.backend.repository.OrdersRepository;
+import com.stripe.Stripe;
 import com.stripe.exception.SignatureVerificationException;
+import com.stripe.exception.StripeException;
 import com.stripe.model.*;
 import com.stripe.net.Webhook;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.transaction.annotation.Transactional;
@@ -16,6 +18,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.Optional;
 
+@Slf4j
 @RequiredArgsConstructor
 @RestController
 @RequestMapping("/stripe")
@@ -29,81 +32,92 @@ public class StripeWebhookController {
 
     @Transactional
     @PostMapping("/webhook")
-    public ResponseEntity<String> handleStripeWebhook(@RequestBody String payload,
-                                                      @RequestHeader("Stripe-Signature") String sigHeader,
-                                                      @RequestHeader(value = "Stripe-Account", required = false) String stripeAccount) {
-        Event event;
+    public ResponseEntity<String> handleStripeWebhook(
+            @RequestBody String payload,
+            @RequestHeader("Stripe-Signature") String sigHeader) {
 
+        Event event;
         try {
             event = Webhook.constructEvent(payload, sigHeader, webhookSecret);
+            log.info("Received Stripe event: {}", event.getType());
+            log.info("Stripe Version : {}", Stripe.API_VERSION);
+            log.info("Api verison ;{}",event.getApiVersion());
         } catch (SignatureVerificationException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("");
+            log.error("Invalid webhook signature", e);
+            return ResponseEntity.badRequest().body("Invalid signature");
         }
 
-        System.out.println("Received event type: " + event.getType());
-
         try {
-            if ("payment_intent.succeeded".equals(event.getType())) {
-                EventDataObjectDeserializer dataObjectDeserializer = event.getDataObjectDeserializer();
-
-                // For payment_intent.succeeded, we need to get the PaymentIntent
-                Optional<StripeObject> objectOptional = dataObjectDeserializer.getObject();
-                if (objectOptional.isPresent() && objectOptional.get() instanceof PaymentIntent paymentIntent) {
-                    System.out.println("PaymentIntent metadata: " + paymentIntent.getMetadata());
-
-                    String orderId = paymentIntent.getMetadata().get("orderId");
-                    if (orderId != null) {
-                        updateOrderStatus(orderId, OrderStatus.COMPLETED);
-                        return ResponseEntity.ok("PAYMENT_SUCCESS");
-                    }
-                }
-            } else if ("charge.succeeded".equals(event.getType())) {
-                // For charge.succeeded, we need to get the Charge object and then the payment_intent ID
-                EventDataObjectDeserializer dataObjectDeserializer = event.getDataObjectDeserializer();
-                Optional<StripeObject> objectOptional = dataObjectDeserializer.getObject();
-
-                if (objectOptional.isPresent()) {
-                    Object object = objectOptional.get();
-                    String paymentIntentId = null;
-
-                    if (object instanceof Charge charge) {
-                        paymentIntentId = charge.getPaymentIntent();
-                    }
-
-                    if (paymentIntentId != null) {
-                        // Retrieve the PaymentIntent to get the metadata
-                        PaymentIntent paymentIntent = PaymentIntent.retrieve(paymentIntentId);
-                        String orderId = paymentIntent.getMetadata().get("orderId");
-
-                        if (orderId != null) {
-                            updateOrderStatus(orderId, OrderStatus.COMPLETED);
-                            return ResponseEntity.ok("PAYMENT_SUCCESS");
-                        }
-                    }
-                }
-            } else if ("payment_intent.payment_failed".equals(event.getType())) {
-                // Handle payment failure (existing code)
+            switch (event.getType()) {
+                case "payment_intent.succeeded":
+                    return handlePaymentIntentSucceeded(event);
+                case "payment_intent.payment_failed":
+                    return handlePaymentIntentFailed(event);
+                case "charge.succeeded":
+                    return handleChargeSucceeded(event);
+                case "charge.failed":
+                    return handleChargeFailed(event);
+                default:
+                    log.info("Unhandled event type: {}", event.getType());
+                    return ResponseEntity.ok("Unhandled event type");
             }
-
-            // For all other event types, return OK but don't process
-            return ResponseEntity.ok("EVENT_NOT_HANDLED");
-
+        } catch (StripeException e) {
+            log.error("Stripe API error", e);
+            return ResponseEntity.internalServerError().body("Stripe API error");
         } catch (Exception e) {
-            System.err.println("Error processing webhook: " + e.getMessage());
-            e.printStackTrace();
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error processing webhook");
+            log.error("Webhook processing error", e);
+            return ResponseEntity.internalServerError().body("Processing error");
         }
     }
 
-    private void updateOrderStatus(String orderId, OrderStatus status) {
-        Orders order = ordersRepository.findById(Long.parseLong(orderId))
+    private ResponseEntity<String> handlePaymentIntentSucceeded(Event event) throws StripeException {
+        PaymentIntent paymentIntent = (PaymentIntent) event.getDataObjectDeserializer().getObject().orElseThrow();
+        return updateOrderFromPaymentIntent(paymentIntent, OrderStatus.COMPLETED, "Payment succeeded");
+    }
+
+    private ResponseEntity<String> handlePaymentIntentFailed(Event event) throws StripeException {
+        PaymentIntent paymentIntent = (PaymentIntent) event.getDataObjectDeserializer().getObject().orElseThrow();
+        return updateOrderFromPaymentIntent(paymentIntent, OrderStatus.PAYMENT_FAILED, "Payment failed");
+    }
+
+    private ResponseEntity<String> handleChargeSucceeded(Event event) throws StripeException {
+        Charge charge = (Charge) event.getDataObjectDeserializer().getObject().orElseThrow();
+        PaymentIntent paymentIntent = PaymentIntent.retrieve(charge.getPaymentIntent());
+        return updateOrderFromPaymentIntent(paymentIntent, OrderStatus.COMPLETED, "Charge succeeded");
+    }
+
+    private ResponseEntity<String> handleChargeFailed(Event event) throws StripeException {
+        Charge charge = (Charge) event.getDataObjectDeserializer().getObject().orElseThrow();
+        PaymentIntent paymentIntent = PaymentIntent.retrieve(charge.getPaymentIntent());
+        return updateOrderFromPaymentIntent(paymentIntent, OrderStatus.PAYMENT_FAILED, "Charge failed");
+    }
+
+    private ResponseEntity<String> updateOrderFromPaymentIntent(
+            PaymentIntent paymentIntent,
+            OrderStatus status,
+            String successMessage) {
+
+        // Try to find order by PaymentIntent ID first
+        Orders order = ordersRepository.findByPaymentIntentId(paymentIntent.getId())
+                .or(() -> {
+                    // Fallback to metadata if PaymentIntent ID not found
+                    String orderId = paymentIntent.getMetadata().get("orderId");
+                    if (orderId != null) {
+                        return ordersRepository.findById(Long.parseLong(orderId));
+                    }
+                    return Optional.empty();
+                })
                 .orElseThrow(() -> new RuntimeException("Order not found"));
 
         order.setStatus(status);
         ordersRepository.save(order);
 
+        // Notify restaurant
         messagingTemplate.convertAndSend(
                 "/topic/restaurant/" + order.getRestaurant().getId() + "/orders",
-                "New Order has arrived (ID : " + order.getId() + ")");
+                "Order update: " + order.getId() + " - " + status);
+
+        log.info("Updated order {} to status {}", order.getId(), status);
+        return ResponseEntity.ok(successMessage);
     }
 }

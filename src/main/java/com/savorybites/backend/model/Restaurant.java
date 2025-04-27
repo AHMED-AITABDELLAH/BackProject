@@ -60,6 +60,10 @@ public class Restaurant {
     @Column(name = "is_verified")
     private Boolean isVerified = false;
 
+    @JsonIgnore
+    @Column(name = "is_setup_completed")
+    private Boolean isSetupComplete = false;
+
     @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "address_id", referencedColumnName = "address_id", nullable = false)
     private Address address;
@@ -87,5 +91,7 @@ public class Restaurant {
         }
         if(isVerified == null)
             isVerified = false;
+        if(isSetupComplete == null)
+            isSetupComplete = false;
     }
 }

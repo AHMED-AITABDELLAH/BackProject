@@ -156,13 +156,18 @@ public class OrdersService {
                     .findByIdAndUser(paymentMethodID,user).orElseThrow(
                             ()-> new EntityNotFoundException("No payment method with that id.")
                     );
+
+            long amount = (long) (order.getTotalPrice() * 100);
+            long fee=(long)(amount*0.1);
             //create and charge the user for the order
             try {
                 PaymentIntentCreateParams params = PaymentIntentCreateParams.builder()
-                        .setAmount((long) (order.getTotalPrice() * 100))
+                        .setAmount(amount)
                         .setCurrency("mad")
+                        .setApplicationFeeAmount(fee)
                         .setCustomer(paymentMethod.getStripeCustomerId())
                         .setPaymentMethod(paymentMethod.getStripePaymentMethodId())
+                        .addPaymentMethodType("card")
                         .setConfirm(true)
                         .setOffSession(true)
                         .putMetadata("orderId", order.getId().toString())
@@ -172,11 +177,9 @@ public class OrdersService {
                                         .build()
                         )
                         .build();
-                RequestOptions requestOptions = RequestOptions.builder()
-                        .setStripeAccount(order.getRestaurant().getStripeAccountId()) // IMPORTANT
-                        .build();
 
-                PaymentIntent intent = PaymentIntent.create(params, requestOptions);
+
+                PaymentIntent intent = PaymentIntent.create(params);
 
                 order.setPaymentIntentId(intent.getId());
             } catch (StripeException e) {

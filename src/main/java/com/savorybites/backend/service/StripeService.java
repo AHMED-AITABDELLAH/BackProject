@@ -10,12 +10,9 @@ import com.stripe.model.*;
 import com.stripe.param.*;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import org.apache.catalina.connector.Request;
-import org.apache.catalina.connector.Response;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.web.ErrorResponse;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
@@ -32,6 +29,7 @@ public class StripeService {
     private final RestaurantRepository restaurantRepository;
 
     /**User Logic**/
+
     private String createOrGetStripeCustomer(LocalUser user) throws StripeException {
         // Check if any payment method exists for the user
         Optional<PlatformPaymentMethod> existing = platformPaymentMethodRepository
@@ -121,54 +119,17 @@ public class StripeService {
 
     /**Restaurant Logic**/
 
-    /*
+    public String createAccount(String emailRestaurant) throws StripeException {
 
-    @Transactional
-    public String createExpressAccountAndOnboardingLink(Restaurant restaurant) throws StripeException {
-
-        // 1. Create Stripe test Account
         AccountCreateParams params = AccountCreateParams.builder()
-                .setType(AccountCreateParams.Type.CUSTOM)
-                .setCountry("GB") // Use the country code of the restaurant (UK)
-                .setEmail(restaurant.getEmail())
+                .setType(AccountCreateParams.Type.EXPRESS) // Express account
                 .setBusinessType(AccountCreateParams.BusinessType.INDIVIDUAL)
-                // Add required capabilities
-                .setCapabilities(
-                        AccountCreateParams.Capabilities.builder()
-                                .setCardPayments(AccountCreateParams.Capabilities.CardPayments.builder()
-                                        .setRequested(true)
-                                        .build())
-                                .setTransfers(AccountCreateParams.Capabilities.Transfers.builder()
-                                        .setRequested(true)
-                                        .build())
-                                .build()
-                )
+                .setCountry("FR") // Set the country (example: FR, GB, US, or MA for Morocco if needed)
+                .setEmail(emailRestaurant) // Optional: pre-fill email if you want
                 .build();
 
+        // Actually create the account
         Account account = Account.create(params);
-
-        // 2. Save Stripe account ID to restaurant entity
-        restaurant.setStripeAccountId(account.getId());
-        restaurantRepository.save(restaurant);
-
-        // 3. Create Onboarding link
-        AccountLinkCreateParams linkParams = AccountLinkCreateParams.builder()
-                .setAccount(account.getId())
-                .setRefreshUrl(refreshUrl) // redirect here if onboarding fails
-                .setReturnUrl(returnUrl)   // redirect here after success
-                .setType(AccountLinkCreateParams.Type.ACCOUNT_ONBOARDING)
-                .build();
-
-        AccountLink link = AccountLink.create(linkParams);
-
-        return link.getUrl(); // Send this to the frontend to redirect the restaurant
-    }
-
-*/
-
-
-    public String createAccount() throws StripeException {
-        Account account = Account.create(AccountCreateParams.builder().build());
         return account.getId();
     }
 
@@ -176,8 +137,8 @@ public class StripeService {
         AccountLink accountLink = AccountLink.create(
                 AccountLinkCreateParams.builder()
                         .setAccount(accountId)
-                        .setReturnUrl(frontUrl +"/restaurant/stripe/" + accountId +"/return")
-                        .setRefreshUrl(frontUrl +"/auth/restaurant/stripe/" + accountId +"/refresh")
+                        .setReturnUrl(frontUrl +"/restaurant/stripe/success")
+                        .setRefreshUrl(frontUrl +"/restaurant/stripe/failed")
                         .setType(AccountLinkCreateParams.Type.ACCOUNT_ONBOARDING)
                         .build()
         );

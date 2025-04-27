@@ -16,6 +16,8 @@ import org.springframework.security.web.firewall.RequestRejectedException;
 import org.springframework.stereotype.Service;
 import com.savorybites.backend.api.dto.auth.RestaurantRegistrationBody;
 import com.savorybites.backend.model.Restaurant;
+import org.springframework.transaction.annotation.Transactional;
+
 import java.time.Instant;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -77,17 +79,16 @@ public class RestaurantService {
         address.setRestaurant(restaurant);         // unidirectional link
         restaurant.setAddress(address);            //sets FK reference
 
-        // Step 3: assign a strip account
-        String onboardingUrl =restaurantOnboardingService.onboardRestaurant(restaurant);
 
-        // Step 3.5: send wait for approval email
+
+        // Step 3: send wait for approval email
         emailService.sendAccountIsWaitingApproval(restaurant);
 
         // Step 4: Save the restaurant (cascade saves address)
         restaurantRepository.save(restaurant);
 
 
-        return ResponseEntity.ok(Map.of("onboardingUrl", onboardingUrl));
+        return ResponseEntity.ok("Restaurant account registred successfully");
 
 
     }
@@ -257,5 +258,12 @@ public class RestaurantService {
 
     public Restaurant getRestaurantsById(long restaurantID) {
         return restaurantRepository.findById(restaurantID).orElseThrow();
+    }
+
+    @Transactional
+    public void setSetupCompleted(Restaurant restaurant){
+        Restaurant managedRestaurant = getManagedRestaurant(restaurant);
+        managedRestaurant.setIsSetupComplete(true);
+        restaurantRepository.save(managedRestaurant);
     }
 }
