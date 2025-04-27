@@ -60,16 +60,6 @@ public class OrdersService {
                 .build();
         return Refund.create(params);
     }
-    public Transfer reverseTransfer(String transferId, String connectedAccountId) throws StripeException {
-        // RequestOptions for Stripe Connect (if applicable)
-        RequestOptions requestOptions = RequestOptions.builder()
-                .setStripeAccount(connectedAccountId) // For connected restaurant account
-                .build();
-
-        // Retrieve and cancel the transfer
-        Transfer transfer = Transfer.retrieve(transferId, requestOptions);
-        return transfer.cancel();
-    }
 
     /*User Exclusive*/
 
