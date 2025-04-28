@@ -3,10 +3,12 @@ package com.savorybites.backend.service;
 import com.savorybites.backend.api.dto.Order.OrderDTO;
 import com.savorybites.backend.api.dto.admin.*;
 import com.savorybites.backend.api.dto.food.FoodDTO;
+import com.savorybites.backend.api.dto.restaurant.FoodStockStatistics;
 import com.savorybites.backend.api.dto.restaurant.RestaurantDTO;
 import com.savorybites.backend.api.dto.restaurant.RestaurantDashboardStatistics;
 import com.savorybites.backend.api.dto.user.UserDTO;
 import com.savorybites.backend.model.Admin;
+import com.savorybites.backend.model.OrderStatus;
 import com.savorybites.backend.model.Restaurant;
 import com.savorybites.backend.model.Status;
 import com.savorybites.backend.repository.*;
@@ -103,6 +105,13 @@ public class DashboardService {
     private OrderStatistics getOrderStatistics(){
         OrderStatistics orderStatistics = new OrderStatistics();
         orderStatistics.setTotalOrderCount(ordersRepository.count());
+        orderStatistics.setUncompletedOrderCount(ordersRepository.countAllByStatus(OrderStatus.UNCOMPLETED));
+        orderStatistics.setCompletedOrderCount(ordersRepository.countAllByStatus(OrderStatus.COMPLETED));
+        orderStatistics.setAcceptedOrderCount(ordersRepository.countAllByStatus(OrderStatus.ACCEPTED));
+        orderStatistics.setDeliveredOrderCount(ordersRepository.countAllByStatus(OrderStatus.DELIVERED));
+        orderStatistics.setCancelledOrderCount(ordersRepository.countAllByStatus(OrderStatus.CANCELLED));
+        orderStatistics.setPaymentFailedOrderCount(ordersRepository.countAllByStatus(OrderStatus.PAYMENT_FAILED));
+        orderStatistics.setRejectedOrderCount(ordersRepository.countAllByStatus(OrderStatus.REJECTED));
         orderStatistics.setWeeklyOrderStats(getWeeklyOrderStats());
         orderStatistics.setTopBigOrders(ordersRepository
                 .findTop3ExpensiveOrders()
@@ -155,6 +164,13 @@ public class DashboardService {
 
     private OrderStatistics getRestaurantOrderStatistics(Restaurant restaurant){
         OrderStatistics orderStatistics = new OrderStatistics();
+        orderStatistics.setUncompletedOrderCount(ordersRepository.countAllByStatusAndRestaurant(OrderStatus.UNCOMPLETED,restaurant));
+        orderStatistics.setCompletedOrderCount(ordersRepository.countAllByStatusAndRestaurant(OrderStatus.COMPLETED,restaurant));
+        orderStatistics.setAcceptedOrderCount(ordersRepository.countAllByStatusAndRestaurant(OrderStatus.ACCEPTED,restaurant));
+        orderStatistics.setDeliveredOrderCount(ordersRepository.countAllByStatusAndRestaurant(OrderStatus.DELIVERED,restaurant));
+        orderStatistics.setCancelledOrderCount(ordersRepository.countAllByStatusAndRestaurant(OrderStatus.CANCELLED,restaurant));
+        orderStatistics.setPaymentFailedOrderCount(ordersRepository.countAllByStatusAndRestaurant(OrderStatus.PAYMENT_FAILED,restaurant));
+        orderStatistics.setRejectedOrderCount(ordersRepository.countAllByStatusAndRestaurant(OrderStatus.REJECTED,restaurant));
         orderStatistics.setTotalOrderCount(ordersRepository.countByRestaurant(restaurant));
         orderStatistics.setWeeklyOrderStats(getRestaurantWeeklyOrderStats(restaurant));
         orderStatistics.setTopBigOrders(ordersRepository
@@ -162,7 +178,6 @@ public class DashboardService {
                 .stream().map(OrderDTO::new).toList());
         return orderStatistics;
     }
-
 
     private FoodStatistics getRestaurantFoodStatistics(Restaurant restaurant){
         FoodStatistics foodStatistics = new FoodStatistics();
@@ -177,13 +192,21 @@ public class DashboardService {
         return foodStatistics;
     }
 
+    private FoodStockStatistics getRestaurantFoodStockStatistics(Restaurant restaurant){
+        FoodStockStatistics foodStockStatistics = new FoodStockStatistics();
+        foodStockStatistics.setTotalFoodCount(foodRepository.countByRestaurant(restaurant));
+        foodStockStatistics.setTotalAvailableFood(foodRepository.countByIsAvailableTrueAndRestaurant(restaurant));
+        foodStockStatistics.setTotalUnavailableFood(foodRepository.countByIsAvailableFalseAndRestaurant(restaurant));
+        return foodStockStatistics;
+    }
+
     public RestaurantDashboardStatistics getDashboardStats(Restaurant restaurant) {
         Restaurant theRestaurant = verifyRestaurant(restaurant);
         return new RestaurantDashboardStatistics(
+                getRestaurantFoodStockStatistics(restaurant),
                 getRestaurantFoodStatistics(restaurant),
                 getRestaurantOrderStatistics(restaurant),
                 getRestaurantRevenueStatistics(restaurant)
-
         );
     }
 

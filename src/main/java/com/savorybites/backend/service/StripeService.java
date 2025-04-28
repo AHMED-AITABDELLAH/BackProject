@@ -153,4 +153,16 @@ public class StripeService {
         return accountLink.getUrl();
     }
 
+    public String createStripeAccountLink(String accountId) throws StripeException {
+        AccountLink accountLink = AccountLink.create(
+                AccountLinkCreateParams.builder()
+                        .setAccount(accountId)
+                        .setReturnUrl(frontUrl +"/restaurant/account_settings")
+                        .setRefreshUrl(frontUrl +"/restaurant/account_settings")
+                        .setType(AccountLinkCreateParams.Type.ACCOUNT_ONBOARDING)
+                        .build()
+        );
+        return accountLink.getUrl();
+    }
+
 }

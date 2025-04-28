@@ -6,6 +6,7 @@ import com.savorybites.backend.model.Restaurant;
 import com.savorybites.backend.service.DashboardService;
 import com.savorybites.backend.service.RestaurantOnboardingService;
 import com.savorybites.backend.service.RestaurantService;
+import com.savorybites.backend.service.StripeService;
 import com.stripe.exception.StripeException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -22,6 +23,7 @@ public class RestaurantController {
     private final RestaurantService restaurantService;
     private final DashboardService dashboardService;
     private final RestaurantOnboardingService restaurantOnboardingService;
+    private final StripeService stripeService;
 
     @GetMapping("/isSetupComplete")
     public ResponseEntity<Boolean> isSetupComplete(@AuthenticationPrincipal Restaurant restaurant){
@@ -63,5 +65,10 @@ public class RestaurantController {
     @GetMapping("/dashboard")
     public RestaurantDashboardStatistics getDashboard(@AuthenticationPrincipal Restaurant restaurant){
         return dashboardService.getDashboardStats(restaurant);
+    }
+
+    @GetMapping("/stripeAccountLink")
+    public ResponseEntity<String> getStripeAccountLink(@AuthenticationPrincipal Restaurant restaurant) throws StripeException {
+        return ResponseEntity.ok(stripeService.createStripeAccountLink(restaurant.getStripeAccountId()));
     }
 }

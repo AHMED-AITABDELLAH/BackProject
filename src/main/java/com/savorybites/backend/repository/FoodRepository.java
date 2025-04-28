@@ -75,7 +75,7 @@ public interface FoodRepository extends JpaRepository<Food, Long> {
     @Query(value = """
     SELECT r.* FROM RESTAURANT r
     JOIN FOOD f ON r.id = f.restaurant_id
-    GROUP BY r.id, r.title, r.description, r.email, r.phone, r.PROFILE_IMG, r.status, r.address_id, CONTACT_EMAIL, IS_APPROVED, IS_VERIFIED, PASSWORD, PAYPAL_EMAIL, PROFILE_BANNER, ROLE, SHIPPING_FEES
+    GROUP BY r.id, r.title, r.description, r.email, r.phone, r.PROFILE_IMG, r.status, r.address_id, CONTACT_EMAIL, IS_APPROVED, IS_VERIFIED, PASSWORD, STRIPE_ACCOUNT_ID, PROFILE_BANNER, ROLE, SHIPPING_FEES, IS_SETUP_COMPLETED
     ORDER BY SUM(f.sold) DESC
     FETCH FIRST 3 ROWS ONLY
     """, nativeQuery = true)
@@ -95,6 +95,10 @@ public interface FoodRepository extends JpaRepository<Food, Long> {
     FETCH FIRST 3 ROWS ONLY
     """, nativeQuery = true)
     List<Food> findTop3BestSellingFoodsByRestaurant(@Param("restaurantId") Long restaurantId);
+
+    long countByIsAvailableTrueAndRestaurant(Restaurant restaurant);
+
+    long countByIsAvailableFalseAndRestaurant(Restaurant restaurant);
 
 
 }

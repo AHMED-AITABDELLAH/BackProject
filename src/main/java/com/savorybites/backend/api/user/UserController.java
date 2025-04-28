@@ -1,5 +1,6 @@
 package com.savorybites.backend.api.user;
 
+import com.savorybites.backend.api.dto.user.UserDTO;
 import com.savorybites.backend.api.dto.user.UserDetailsBody;
 import com.savorybites.backend.service.UserService;
 import jakarta.transaction.Transactional;
@@ -21,8 +22,8 @@ public class UserController {
     }
 
     @GetMapping("/accountDetails")
-    public LocalUser getLoggedInUserDetails(@AuthenticationPrincipal LocalUser user){
-        return user;
+    public UserDTO getLoggedInUserDetails(@AuthenticationPrincipal LocalUser user){
+        return new UserDTO(user);
     }
 
     @Transactional

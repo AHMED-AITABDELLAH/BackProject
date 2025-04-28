@@ -141,5 +141,7 @@ public interface OrdersRepository extends JpaRepository<Orders, Long> {
 
     Optional<Orders> findByPaymentIntentId(String paymentIntentId);
 
-    Optional<Orders> findByChargeId(String chargeId);
+    long countAllByStatusAndRestaurant(OrderStatus status, Restaurant restaurant);
+
+    long countAllByStatus(OrderStatus status);
 }
