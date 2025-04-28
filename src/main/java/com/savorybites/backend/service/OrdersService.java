@@ -5,13 +5,7 @@ import com.savorybites.backend.model.*;
 import com.savorybites.backend.repository.*;
 import com.stripe.exception.StripeException;
 import com.stripe.model.*;
-import com.stripe.model.tax.Transaction;
-import com.stripe.net.RequestOptions;
 import com.stripe.param.PaymentIntentCreateParams;
-import com.stripe.param.RefundCreateParams;
-import com.stripe.param.TransferCreateParams;
-import com.stripe.param.TransferReversalCreateParams;
-import com.stripe.service.TransferReversalService;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -196,7 +190,7 @@ public class OrdersService {
         }
 
     public List<Orders> getPlacedOrders(LocalUser user){
-        List<Orders> ordersList = ordersRepository.findAllByUser(userService.getManagedUser(user));
+        List<Orders> ordersList = ordersRepository.findAllByUserOrderByOrderDateDesc(userService.getManagedUser(user));
         if(ordersList==null)
             throw new RuntimeException("Something went wrong");
         return ordersList;
