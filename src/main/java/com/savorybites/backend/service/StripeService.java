@@ -79,7 +79,7 @@ public class StripeService {
 
         System.out.println("3");
         PlatformPaymentMethod clientPm = platformPaymentMethodRepository
-                .findFirstByUserOrderByIdAsc(user).orElseThrow();
+                .findByStripeCustomerId(customerId);
         clientPm.setStripePaymentMethodId(paymentMethod.getId());
         clientPm.setBrand(paymentMethod.getCard().getBrand());
         clientPm.setLast4(paymentMethod.getCard().getLast4());

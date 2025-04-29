@@ -19,4 +19,6 @@ public interface PlatformPaymentMethodRepository extends JpaRepository<PlatformP
     boolean existsByUserAndIsDefaultTrue(LocalUser user);
 
     Optional<PlatformPaymentMethod> findByUserAndIsDefaultTrue(LocalUser user);
+
+    PlatformPaymentMethod findByStripeCustomerId(String stripeCustomerId);
 }
