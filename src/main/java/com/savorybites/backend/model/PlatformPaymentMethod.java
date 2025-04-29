@@ -19,7 +19,7 @@ public class PlatformPaymentMethod {
     private String stripeCustomerId;
 
     @JsonIgnore
-    @Column(name = "stripe_payment_method_id", nullable = false)
+    @Column(name = "stripe_payment_method_id")
     private String stripePaymentMethodId;
 
     private Boolean isDefault=false;

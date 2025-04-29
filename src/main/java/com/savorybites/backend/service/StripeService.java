@@ -51,7 +51,10 @@ public class StripeService {
         System.out.println("We create new one :((((");
         Customer customer = Customer.create(CustomerCreateParams.builder()
                 .setEmail(user.getEmail()).build());
-
+        PlatformPaymentMethod paymentMethod = new PlatformPaymentMethod();
+        paymentMethod.setUser(user);
+        paymentMethod.setStripeCustomerId(customer.getId());
+        platformPaymentMethodRepository.save(paymentMethod);
         return customer.getId();
     }
 
@@ -75,9 +78,8 @@ public class StripeService {
         PaymentMethod paymentMethod = PaymentMethod.retrieve(paymentMethodId);
 
         System.out.println("3");
-        PlatformPaymentMethod clientPm = new PlatformPaymentMethod();
-        clientPm.setUser(user);
-        clientPm.setStripeCustomerId(customerId);
+        PlatformPaymentMethod clientPm = platformPaymentMethodRepository
+                .findFirstByUserOrderByIdAsc(user).orElseThrow();
         clientPm.setStripePaymentMethodId(paymentMethod.getId());
         clientPm.setBrand(paymentMethod.getCard().getBrand());
         clientPm.setLast4(paymentMethod.getCard().getLast4());
