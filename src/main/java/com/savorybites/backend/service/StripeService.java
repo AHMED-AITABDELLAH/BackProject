@@ -1,9 +1,10 @@
 package com.savorybites.backend.service;
 
+import com.savorybites.backend.api.dto.stripeAcccount.IntentResponseDTO;
+import com.savorybites.backend.api.dto.stripeAcccount.PaymentSaveDTO;
 import com.savorybites.backend.model.*;
 import com.savorybites.backend.repository.OrdersRepository;
 import com.savorybites.backend.repository.PlatformPaymentMethodRepository;
-import com.savorybites.backend.repository.RestaurantRepository;
 import com.savorybites.backend.repository.TrackingDataRepository;
 import com.stripe.exception.StripeException;
 import com.stripe.model.*;
@@ -17,8 +18,6 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.sql.Ref;
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -51,35 +50,34 @@ public class StripeService {
         System.out.println("We create new one :((((");
         Customer customer = Customer.create(CustomerCreateParams.builder()
                 .setEmail(user.getEmail()).build());
-        PlatformPaymentMethod paymentMethod = new PlatformPaymentMethod();
-        paymentMethod.setUser(user);
-        paymentMethod.setStripeCustomerId(customer.getId());
-        platformPaymentMethodRepository.save(paymentMethod);
         return customer.getId();
     }
 
-    public String createSetupIntent(LocalUser user) throws StripeException {
-        String customerId = createOrGetStripeCustomer(user);
+    public IntentResponseDTO createSetupIntent(LocalUser user) throws StripeException {
+        String customerID = createOrGetStripeCustomer(user);
         SetupIntent intent = SetupIntent.create(
                 SetupIntentCreateParams.builder()
-                        .setCustomer(customerId)
+                        .setCustomer(customerID)
                         .addPaymentMethodType("card")
                         .build()
         );
-        return intent.getClientSecret();
+        PlatformPaymentMethod paymentMethod = new PlatformPaymentMethod();
+        paymentMethod.setUser(user);
+        paymentMethod.setStripeCustomerId(customerID);
+        paymentMethod=platformPaymentMethodRepository.save(paymentMethod);
+        return new IntentResponseDTO(paymentMethod.getId(),intent.getClientSecret());
     }
 
     @Transactional
-    public void savePaymentMethod(LocalUser user, String paymentMethodId) throws StripeException {
+    public void savePaymentMethod(LocalUser user, PaymentSaveDTO paymentMethodDTO) throws StripeException {
         System.out.println("1");
-        String customerId = createOrGetStripeCustomer(user);
         System.out.println("2");
 
-        PaymentMethod paymentMethod = PaymentMethod.retrieve(paymentMethodId);
+        PaymentMethod paymentMethod = PaymentMethod.retrieve(paymentMethodDTO.getPaymentMethodId());
 
         System.out.println("3");
-        PlatformPaymentMethod clientPm = platformPaymentMethodRepository
-                .findByStripeCustomerId(customerId);
+
+        PlatformPaymentMethod clientPm = platformPaymentMethodRepository.findByIdAndUser(paymentMethodDTO.getPlatformPaymentId(),user).orElseThrow();
         clientPm.setStripePaymentMethodId(paymentMethod.getId());
         clientPm.setBrand(paymentMethod.getCard().getBrand());
         clientPm.setLast4(paymentMethod.getCard().getLast4());

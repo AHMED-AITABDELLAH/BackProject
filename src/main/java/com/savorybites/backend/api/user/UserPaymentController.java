@@ -1,5 +1,7 @@
 package com.savorybites.backend.api.user;
 
+import com.savorybites.backend.api.dto.stripeAcccount.IntentResponseDTO;
+import com.savorybites.backend.api.dto.stripeAcccount.PaymentSaveDTO;
 import com.savorybites.backend.api.dto.user.PaymentMethodDTO;
 import com.savorybites.backend.model.LocalUser;
 import com.savorybites.backend.service.StripeService;
@@ -25,9 +27,9 @@ public class UserPaymentController {
      */
     @PostMapping("/setupIntent")
     public ResponseEntity<?> createSetupIntent(@AuthenticationPrincipal LocalUser user) throws StripeException {
-        String clientSecret = stripeService.createSetupIntent(user);
-        System.out.println("niya tsaftat : "+clientSecret);
-        return ResponseEntity.ok(Map.of("clientSecret", clientSecret));
+        IntentResponseDTO intentResponseDTO = stripeService.createSetupIntent(user);
+        System.out.println("niya tsaftat : "+intentResponseDTO.getClientSecret());
+        return ResponseEntity.ok(intentResponseDTO);
     }
 
     /**
@@ -37,17 +39,17 @@ public class UserPaymentController {
     @PostMapping("/savePaymentMethod")
     public ResponseEntity<?> savePaymentMethod(
             @AuthenticationPrincipal LocalUser user,
-            @RequestBody Map<String, String> request
+            @RequestBody PaymentSaveDTO request
     ) throws StripeException {
-        System.out.println("niya twslat bdina nsaviw : "+request.get("paymentMethodId"));
+        System.out.println("niya twslat bdina nsaviw : "+request.getPaymentMethodId());
 
-        String paymentMethodId = request.get("paymentMethodId");
+        String paymentMethodId = request.getPaymentMethodId();
         if (paymentMethodId == null || paymentMethodId.isBlank()) {
             return ResponseEntity.badRequest().body("Missing paymentMethodId");
         }
         System.out.println("ngolo bsmlah");
 
-        stripeService.savePaymentMethod(user, paymentMethodId);
+        stripeService.savePaymentMethod(user, request);
         return ResponseEntity.ok("Card saved successfully");
     }
 
