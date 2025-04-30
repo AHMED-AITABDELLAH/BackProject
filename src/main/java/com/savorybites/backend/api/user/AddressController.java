@@ -4,6 +4,7 @@ import com.savorybites.backend.api.dto.address.AddressRegistrationBody;
 import com.savorybites.backend.model.Address;
 import com.savorybites.backend.model.LocalUser;
 import com.savorybites.backend.service.AddressService;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -23,11 +24,11 @@ public class AddressController {
     }
 
     @GetMapping("/hasAddress")
-    public ResponseEntity<Object> hasAddress(@AuthenticationPrincipal LocalUser user){
+    public ResponseEntity<Boolean> hasAddress(@AuthenticationPrincipal LocalUser user){
         boolean success=addressService.hasAddress(user);
         return success
-                ?ResponseEntity.ok("User has at least one address!")
-                :ResponseEntity.noContent().build();
+                ?ResponseEntity.ok(success)
+                :ResponseEntity.status(HttpStatus.NO_CONTENT).body(success);
     }
 
     @GetMapping("/")

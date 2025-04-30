@@ -82,8 +82,8 @@ public class CourierService {
         trackingDataRepository.save(trackingData);
         //Send Message to the user that his order was assigned to the courier
         messagingTemplate.convertAndSend(
-                "/topic/user/" + order.getUser().getId() + "/ordersUpdate",
-                "Your Order (ID : "+order.getId()+") got a courier assigned.");
+                "/topic/user/" + order.getUser().getId() + "/orderStatusUpdate",
+                "Your Order (ID : "+order.getId()+") was assigned a courier.");
         return ResponseEntity.ok("Courier assigned successfully.");
     }
 

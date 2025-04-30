@@ -1,6 +1,5 @@
 package com.savorybites.backend.repository;
 
-import com.savorybites.backend.api.dto.user.UserDTO;
 import com.savorybites.backend.model.LocalUser;
 import com.savorybites.backend.model.OrderStatus;
 import com.savorybites.backend.model.Orders;
@@ -15,7 +14,7 @@ import java.util.List;
 import java.util.Optional;
 
 public interface OrdersRepository extends JpaRepository<Orders, Long> {
-    List<Orders> findAllByUser(LocalUser user);
+    List<Orders> findAllByUserOrderByOrderDateDesc(LocalUser user);
 
     Optional<Orders> findOrderByIdAndUser(Long id, LocalUser user);
 
@@ -36,7 +35,7 @@ public interface OrdersRepository extends JpaRepository<Orders, Long> {
               TO_CHAR(o.ORDER_DATE, 'IYYY-"W"IW') AS week_label,
               COUNT(CASE WHEN o.status = 'DELIVERED' THEN 1 END) AS deliveredOrdersCount,
               COUNT(CASE WHEN o.status = 'CANCELLED' THEN 1 END) AS canceledOrdersCount,
-              COUNT(CASE WHEN o.status = 'DECLINED' THEN 1 END) AS declinedOrdersCount
+              COUNT(CASE WHEN o.status = 'REJECTED' THEN 1 END) AS declinedOrdersCount
             FROM orders o
             WHERE o.restaurant_id = :restaurantId
             GROUP BY TO_CHAR(o.ORDER_DATE, 'IYYY-"W"IW')
@@ -139,4 +138,10 @@ public interface OrdersRepository extends JpaRepository<Orders, Long> {
             FETCH FIRST 3 ROWS ONLY
             """, nativeQuery = true)
     List<Orders> findTop3ExpensiveOrdersByRestaurant(@Param("restaurantId") Long restaurantId);
+
+    Optional<Orders> findByPaymentIntentId(String paymentIntentId);
+
+    long countAllByStatusAndRestaurant(OrderStatus status, Restaurant restaurant);
+
+    long countAllByStatus(OrderStatus status);
 }

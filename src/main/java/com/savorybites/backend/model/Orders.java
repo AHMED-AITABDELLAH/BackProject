@@ -48,8 +48,8 @@ public class Orders {
     @Column(name = "payment_date")
     private LocalDateTime paymentDate;
 
-    //TODO ADD PAYMENT METHOD
-
+    @Column(name="payment_intent_id")
+    private String paymentIntentId;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
@@ -58,5 +58,7 @@ public class Orders {
 
     @ManyToOne
     private Courier courier;
+
+
 
 }

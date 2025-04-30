@@ -41,6 +41,7 @@ public class SecurityConfig {
                                 (
                                         "/public/**",
                                         "/auth/**",
+                                        "/stripe/**",
                                         "/websocket",
                                         "/websocket/**",
                                         "/swagger-ui.html",

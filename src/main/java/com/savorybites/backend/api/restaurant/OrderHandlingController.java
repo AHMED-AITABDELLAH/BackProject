@@ -6,6 +6,7 @@ import com.savorybites.backend.model.Orders;
 import com.savorybites.backend.model.Restaurant;
 import com.savorybites.backend.service.CourierService;
 import com.savorybites.backend.service.OrdersService;
+import com.stripe.exception.StripeException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -43,7 +44,7 @@ public class OrderHandlingController {
 
     @PutMapping("/incomingOrders/{orderID}/reject")
     public ResponseEntity<?> rejectOrder(@AuthenticationPrincipal Restaurant restaurant,
-                                         @PathVariable long orderID){
+                                         @PathVariable long orderID) throws StripeException {
         return ordersService.rejectOrder(restaurant,orderID);
     }
 

@@ -8,6 +8,7 @@ import com.savorybites.backend.model.OrderItem;
 import com.savorybites.backend.model.Orders;
 import com.savorybites.backend.model.TrackingData;
 import com.savorybites.backend.service.OrdersService;
+import com.stripe.exception.StripeException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -42,10 +43,10 @@ public class OrderController {
     @PutMapping("/placedOrders/{orderID}/checkout")
     public ResponseEntity<String> continueCheckout(@AuthenticationPrincipal LocalUser user,
                                                    @PathVariable long orderID,
-                                                   @RequestParam long addressID)
-                                                   //TODO PAYMENT ID
+                                                   @RequestParam long addressID,
+                                                   @RequestParam long paymentMethodID)
     {
-        return ordersService.continueCheckout(user,addressID,orderID);
+        return ordersService.continueCheckout(user,addressID,orderID,paymentMethodID);
     }
 
     @GetMapping("/placedOrders/{orderID}/orderItems")
@@ -57,7 +58,7 @@ public class OrderController {
 
     @PutMapping("/placedOrders/{orderID}/cancel")
     public ResponseEntity<Object> cancelOrder(@AuthenticationPrincipal LocalUser user,
-                                              @PathVariable long orderID){
+                                              @PathVariable long orderID) throws StripeException {
         boolean success= ordersService.cancelOrder(user, orderID);
         return success
                 ? ResponseEntity.ok("The order is cancelled,you're refund is getting treated.")

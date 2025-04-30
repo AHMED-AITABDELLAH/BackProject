@@ -10,16 +10,16 @@ import com.savorybites.backend.model.verificationModels.PasswordResetToken;
 import com.savorybites.backend.model.verificationModels.VerificationToken;
 import com.savorybites.backend.repository.RestaurantRepository;
 import com.savorybites.backend.repository.VerificationRepository.VerificationTokenRepository;
+import com.stripe.exception.StripeException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.web.firewall.RequestRejectedException;
 import org.springframework.stereotype.Service;
 import com.savorybites.backend.api.dto.auth.RestaurantRegistrationBody;
 import com.savorybites.backend.model.Restaurant;
+import org.springframework.transaction.annotation.Transactional;
+
 import java.time.Instant;
-import java.util.Collections;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -33,6 +33,7 @@ public class RestaurantService {
     private final VerificationTokenRepository verificationTokenRepository;
     private final PasswordResetTokenRepository passwordResetTokenRepository;
     private final AddressService addressService;
+    private final RestaurantOnboardingService restaurantOnboardingService;
 
     public RestaurantService(
             RestaurantRepository restaurantRepository,
@@ -40,7 +41,7 @@ public class RestaurantService {
             EmailService emailService,
             JWTService jwtService,
             VerificationTokenRepository verificationTokenRepository, PasswordResetTokenRepository passwordResetTokenRepository,
-            AddressService addressService) {
+            AddressService addressService, RestaurantOnboardingService restaurantOnboardingService) {
         this.restaurantRepository = restaurantRepository;
         this.encryptionService = encryptionService;
         this.emailService = emailService;
@@ -48,11 +49,12 @@ public class RestaurantService {
         this.verificationTokenRepository = verificationTokenRepository;
         this.passwordResetTokenRepository = passwordResetTokenRepository;
         this.addressService = addressService;
+        this.restaurantOnboardingService = restaurantOnboardingService;
     }
 
 
-    public void registerRestaurant(RestaurantRegistrationBody body)
-            throws UserAlreadyExistsException {
+    public ResponseEntity<?> registerRestaurant(RestaurantRegistrationBody body)
+            throws UserAlreadyExistsException, StripeException {
 
         if (restaurantRepository.findByEmailIgnoreCase(body.getEmail()).isPresent())
             throw new UserAlreadyExistsException();
@@ -64,7 +66,6 @@ public class RestaurantService {
         restaurant.setEmail(body.getEmail());
         restaurant.setPhone(body.getPhone());
         restaurant.setContactEmail(body.getContactEmail());
-        restaurant.setPaypalEmail(body.getPaypalEmail());
         restaurant.setPassword(encryptionService.encryptPassword(body.getPassword()));
         restaurant.setShippingFees(body.getShippingFees());
         restaurant.setIsApproved(false);
@@ -78,12 +79,18 @@ public class RestaurantService {
         address.setRestaurant(restaurant);         // unidirectional link
         restaurant.setAddress(address);            //sets FK reference
 
-        // Step 3: Save the restaurant (cascade saves address)
+
+
+        // Step 3: send wait for approval email
+        emailService.sendAccountIsWaitingApproval(restaurant);
+
+        // Step 4: Save the restaurant (cascade saves address)
         restaurantRepository.save(restaurant);
 
 
-        // Step 4: Send email
-        emailService.sendAccountIsWaitingApproval(restaurant);
+        return ResponseEntity.ok("Restaurant account registred successfully");
+
+
     }
 
     public VerificationToken createVerificationToken(Restaurant restaurant) {
@@ -182,8 +189,6 @@ public class RestaurantService {
         restaurant.setDescription(restaurantDetailsBody.getDescription());
         restaurant.setPhone(restaurantDetailsBody.getPhone());
         restaurant.setShippingFees(restaurantDetailsBody.getShippingFees());
-        //TODO Verify the paypal email
-        restaurant.setPaypalEmail(restaurantDetailsBody.getPaypalEmail());
 
         restaurant.setContactEmail(restaurantDetailsBody.getContactEmail());
 
@@ -251,4 +256,14 @@ public class RestaurantService {
     }
 
 
+    public Restaurant getRestaurantsById(long restaurantID) {
+        return restaurantRepository.findById(restaurantID).orElseThrow();
+    }
+
+    @Transactional
+    public void setSetupCompleted(Restaurant restaurant){
+        Restaurant managedRestaurant = getManagedRestaurant(restaurant);
+        managedRestaurant.setIsSetupComplete(true);
+        restaurantRepository.save(managedRestaurant);
+    }
 }

@@ -15,6 +15,13 @@ import java.util.List;
 public class OrderStatistics {
 
     private long totalOrderCount;
+    private long uncompletedOrderCount;
+    private long completedOrderCount;
+    private long acceptedOrderCount;
+    private long deliveredOrderCount;
+    private long cancelledOrderCount;
+    private long paymentFailedOrderCount;
+    private long rejectedOrderCount;
     private List<WeeklyOrderStats> weeklyOrderStats;
     private List<OrderDTO> topBigOrders;
 

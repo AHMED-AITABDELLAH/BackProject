@@ -10,6 +10,7 @@ import lombok.Setter;
 @AllArgsConstructor
 public class RestaurantDashboardStatistics {
 
+    private FoodStockStatistics foodStockStatistics;
     private FoodStatistics foodStatistics;
     private OrderStatistics orderStatistics;
     private RevenueStatistics revenueStatistics;

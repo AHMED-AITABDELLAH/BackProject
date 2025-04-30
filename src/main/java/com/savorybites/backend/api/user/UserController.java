@@ -1,5 +1,6 @@
 package com.savorybites.backend.api.user;
 
+import com.savorybites.backend.api.dto.user.UserDTO;
 import com.savorybites.backend.api.dto.user.UserDetailsBody;
 import com.savorybites.backend.service.UserService;
 import jakarta.transaction.Transactional;
@@ -21,19 +22,19 @@ public class UserController {
     }
 
     @GetMapping("/accountDetails")
-    public LocalUser getLoggedInUserDetails(@AuthenticationPrincipal LocalUser user){
-        return user;
+    public UserDTO getLoggedInUserDetails(@AuthenticationPrincipal LocalUser user){
+        return new UserDTO(user);
+    }
+
+    @GetMapping("/accountDetails/hasPersonalDetails")
+    public ResponseEntity<Boolean> hasPersonalDetails(@AuthenticationPrincipal LocalUser user){
+        return userService.hasPersonalDetails(user);
     }
 
     @Transactional
     @PostMapping("/updateAccountDetails")
     public ResponseEntity<Object> updateDetails(@AuthenticationPrincipal LocalUser user,@RequestBody UserDetailsBody userDetailsBody){
         return userService.update(user,userDetailsBody);
-    }
-
-    @GetMapping("/paymentMethods")
-    public void get2(){
-
     }
 
 }

@@ -14,7 +14,12 @@ import com.savorybites.backend.repository.VerificationRepository.PasswordResetTo
 import com.savorybites.backend.repository.UserRepository;
 import com.savorybites.backend.repository.RestaurantRepository;
 import com.savorybites.backend.repository.VerificationRepository.VerificationTokenRepository;
+import com.stripe.exception.StripeException;
+import com.stripe.model.Customer;
+import com.stripe.param.CustomerCreateParams;
 import jakarta.transaction.Transactional;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.web.firewall.RequestRejectedException;
@@ -36,6 +41,7 @@ public class UserService {
     private final PasswordResetTokenRepository passwordResetTokenRepository;
     private final RestaurantRepository restaurantRepository;
     private final CartService cartService;
+    private final StripeService stripeService;
 
     public UserService(UserRepository userRepository,
                        EncryptionService encryptionService,
@@ -44,7 +50,7 @@ public class UserService {
                        VerificationTokenRepository verificationTokenRepository,
                        PasswordResetTokenRepository passwordResetTokenRepository,
                        RestaurantRepository restaurantRepository,
-                       CartService cartService) {
+                       CartService cartService, StripeService stripeService) {
         this.userRepository = userRepository;
         this.encryptionService = encryptionService;
         this.jwtService = jwtService;
@@ -53,6 +59,7 @@ public class UserService {
         this.passwordResetTokenRepository = passwordResetTokenRepository;
         this.restaurantRepository = restaurantRepository;
         this.cartService = cartService;
+        this.stripeService = stripeService;
     }
 
     /// ////////////////////////////////////////////SignUP-Registration//////////////////////////////////////
@@ -90,7 +97,9 @@ public class UserService {
         cartService.createCart(newUser);
         verificationTokenRepository.save(verificationToken);
     }
+
     /// //////////Generating verification JWT upon Registering/Login////////////////////////
+    ///
     private VerificationToken createVerificationToken(LocalUser user){
         VerificationToken verificationToken = new VerificationToken();
         verificationToken.setToken(jwtService.generateVerificationJWT(user));
@@ -100,6 +109,7 @@ public class UserService {
     }
 
     /// ////////////////////////////Generating  Password Reset Token //////////////////////////////
+    ///
     private PasswordResetToken createPasswordResetToken(LocalUser user){
         Optional<PasswordResetToken> opToken =passwordResetTokenRepository.findFirstByUserOrderByExpiryDateDesc(user);
         if(opToken.isPresent()){
@@ -118,6 +128,7 @@ public class UserService {
         return passwordResetToken;
 
     }
+
     /// //////////////////////////forgot Password/////////////////////////////////
     public void forgotPassword(String email)
             throws UserNotVerified, UserNotFoundException, EmailAlreadySentException {
@@ -184,8 +195,7 @@ public class UserService {
     /////////////////////////////////////////////LOGIN///////////////////////////////////////////
 
 
-    public String Login(LoginBody loginBody)//The logic for the login
-    //we get the email passed by the login body
+    public String Login(LoginBody loginBody)
             throws BadCredentialsException, UserNotFoundException, UserNotVerified {
         Optional<LocalUser> userOp = userRepository.findByEmailIgnoreCase(loginBody.getEmail());
         //if the User exists
@@ -225,7 +235,8 @@ public class UserService {
 
 
     }
-/// ////////////////////////////Updating Data/////////////////////////////////////////////
+
+    ////////////////////////////Updating Data/////////////////////////////////////////////
 
     public ResponseEntity<Object> update(LocalUser user, UserDetailsBody userDetailsBody){
 
@@ -264,6 +275,7 @@ public class UserService {
     }
 
     /// ////////////////////////////////////////////////////////////////
+    ///
     public LocalUser getManagedUser(LocalUser user){
         Optional<LocalUser> optionalUser=userRepository.findLocalUserById(user.getId());
         if(optionalUser.isPresent())
@@ -271,6 +283,18 @@ public class UserService {
         //TODO idk
         throw new UserNotFoundException();
     }
+
+    public ResponseEntity<Boolean> hasPersonalDetails(LocalUser user) {
+
+        LocalUser managedUser=getManagedUser(user);
+        if(user.getFirstName()==null || user.getLastName()==null || user.getPhone()==null)
+            return ResponseEntity.ok(true);
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).body(false);
+    }
+
+
+    /// /////////////////////Stripe Setup for users/////////////////////////////////////////////////
+
 
 
 }

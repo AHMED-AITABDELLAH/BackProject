@@ -76,8 +76,6 @@ public class FoodService {
     //We get 4 randomized items from the Discounted food items
     public List<Food> OnSaleSection(int discountBase){
         List<Food> foodList=getOnSaleItems(discountBase);
-        if (foodList.isEmpty())
-            return null;
         Collections.shuffle(foodList);
         return foodList
                 .stream()
@@ -88,9 +86,6 @@ public class FoodService {
     //Get (popular food items)
     public List<Food> PopularFoodItems(){
         List<Food> foodList=getListOfPopularFood();
-        if (foodList.isEmpty())
-            return null;
-        Collections.shuffle(foodList);
         return foodList
                 .stream()
                 .limit(8)
@@ -100,8 +95,6 @@ public class FoodService {
 
     public List<Food> getSimilarFood(long categoryID){
         List<Food> foodList=foodByCategory(categoryID);
-        if (foodList.isEmpty())
-            return null;
         Collections.shuffle(foodList);
         return foodList
                 .stream()
@@ -112,8 +105,6 @@ public class FoodService {
     //List all the food of a specified restaurant
     public List<Food> restaurantFood(long id){
         List<Food> foodList=getFoodFromRestaurant(id);
-        if (foodList.isEmpty())
-            return null;//TODO ADD EXCEPTION
         Collections.shuffle(foodList);
         return foodList;
     }
@@ -121,8 +112,6 @@ public class FoodService {
     //List all the food of a specific category
     public List<Food> foodByCategory(long categoryId){
         List<Food> foodList=getFoodByCategory(categoryId);
-        if(foodList.isEmpty())
-            return null;//TODO ADD EXCEPTION
         Collections.shuffle(foodList);
         return foodList;
     }
@@ -130,8 +119,6 @@ public class FoodService {
     //List all the food of some categories using ids
     public List<Food> foodByCategoriesID(List<Long> categoriesID){
         List<Food> foodList=getFoodByCategories(categoriesID);
-        if(foodList.isEmpty())
-            return null;//TODO ADD EXCEPTION
         Collections.shuffle(foodList);
         return foodList;
     }
@@ -139,8 +126,6 @@ public class FoodService {
     //List all the food
     public List<Food> Food(){
         List<Food> foodList=getListOfFood();
-        if (foodList.isEmpty())
-            return null;//TODO ADD EXCEPTION
         Collections.shuffle(foodList);
         return foodList;
     }

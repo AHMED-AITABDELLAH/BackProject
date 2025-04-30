@@ -80,6 +80,8 @@ public class CartController {
         List<Long> categoriesID = cartService.getCategoriesIDsInCart(user);
 
         List<Food> foodList=foodService.foodByCategoriesID(categoriesID);
+        if(foodList.isEmpty())
+            return foodService.PopularFoodItems().stream().map(FoodDTO::new).toList();
 
         return foodList.stream().map(FoodDTO::new).toList();
 

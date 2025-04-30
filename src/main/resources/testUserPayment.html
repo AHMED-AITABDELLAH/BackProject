@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Manage Payment Methods</title>
+  <script src="https://js.stripe.com/v3/"></script>
+  <style>
+    body {
+      font-family: sans-serif;
+      background: #f9f9f9;
+      padding: 20px;
+    }
+    .container {
+      max-width: 600px;
+      margin: auto;
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+    }
+    button {
+      background-color: #FD4C2A;
+      color: white;
+      border: none;
+      padding: 10px 15px;
+      margin-top: 15px;
+      cursor: pointer;
+      border-radius: 5px;
+    }
+    button:hover {
+      background-color: #e24323;
+    }
+    ul {
+      list-style-type: none;
+      padding-left: 0;
+    }
+    li {
+      padding: 10px;
+      border-bottom: 1px solid #ccc;
+    }
+    .card-actions {
+      margin-top: 5px;
+    }
+    .card-actions button {
+      margin-right: 5px;
+      font-size: 0.9em;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <h2>Add New Card</h2>
+  <form id="payment-form">
+    <div id="card-element"></div>
+    <button id="submit">Save Card</button>
+  </form>
+
+  <h2>Your Saved Cards</h2>
+  <ul id="cards-list"></ul>
+</div>
+
+<script>
+  const stripe = Stripe("pk_test_51RHm1SFWUQXfDIlGmKVLISKhH3LpY6Sf9Pp4RC62PoaUcovgWn35VVnAQ5we4xhyd2oMfqz6xjixvonrppTmTFxW000z9mc5cG");
+  const jwt = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6Ijk1OSIsInJvbGUiOiJST0xFX1VTRVIiLCJleHAiOjE3NDU4OTM0MjksImlzcyI6IkFkbWluIn0.d66rOwE3DE3NQDiNHPDtiiHyLOex_dLmTDOODjTglP0";
+  const baseURL = "http://localhost:8080/user/paymentMethods"; // e.g., http://localhost:8080/api/payment-methods
+
+
+  let elements = null;
+  let cardElement = null;
+
+  async function initStripeElements() {
+    const res = await fetch(`${baseURL}/setupIntent`, {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${jwt}`
+      }
+    });
+    const data = await res.json();
+    const clientSecret = data.clientSecret;
+
+    elements = stripe.elements();
+    cardElement = elements.create("card");
+    cardElement.mount("#card-element");
+
+    document.getElementById("payment-form").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const { setupIntent, error } = await stripe.confirmCardSetup(clientSecret, {
+        payment_method: {
+          card: cardElement
+        }
+      });
+
+      if (error) {
+        alert(error.message);
+        return;
+      }
+
+      const saveRes = await fetch(`${baseURL}/savePaymentMethod`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${jwt}`
+        },
+        body: JSON.stringify({ paymentMethodId: setupIntent.payment_method })
+      });
+
+      const saveData = await saveRes.text();
+      alert(saveData);
+      loadPaymentMethods();
+    });
+  }
+
+  async function loadPaymentMethods() {
+    const res = await fetch(`${baseURL}/`, {
+      headers: { "Authorization": `Bearer ${jwt}` }
+    });
+    const cards = await res.json();
+    const list = document.getElementById("cards-list");
+    list.innerHTML = "";
+
+    cards.forEach(card => {
+      const li = document.createElement("li");
+      li.innerHTML = `
+          <strong>**** **** **** ${card.last4}</strong> (${card.brand}) - Exp: ${card.expMonth}/${card.expYear}
+          ${card.isDefault ? " <strong>(Default)</strong>" : ""}
+          <div class="card-actions">
+            ${!card.isDefault ? `<button onclick="setDefault(${card.id})">Set Default</button>` : ""}
+            <button onclick="deleteCard(${card.id})">Delete</button>
+          </div>
+        `;
+      list.appendChild(li);
+    });
+  }
+
+  async function setDefault(id) {
+    const res = await fetch(`${baseURL}/${id}/default`, {
+      method: "PUT",
+      headers: {
+        "Authorization": `Bearer ${jwt}`
+      }
+    });
+
+    const data = await res.text();
+    alert(data);
+    loadPaymentMethods();
+  }
+
+  async function deleteCard(id) {
+    const res = await fetch(`${baseURL}/${id}`, {
+      method: "DELETE",
+      headers: {
+        "Authorization": `Bearer ${jwt}`
+      }
+    });
+
+    const data = await res.text();
+    alert(data);
+    loadPaymentMethods();
+  }
+
+  // Init
+  initStripeElements();
+  loadPaymentMethods();
+</script>
+</body>
+</html>
