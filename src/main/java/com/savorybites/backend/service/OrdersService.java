@@ -285,7 +285,12 @@ public class OrdersService {
             // 3. Notify the restaurant
             messagingTemplate.convertAndSend(
                     "/topic/restaurant/" + order.getRestaurant().getId() + "/orders",
-                    "The payment for the Order (ID: " + order.getId() + ") was transferred successfully."
+                    "The payment for the Order (ID: " + order.getId() + ") was transferred successfully.");
+
+            // 3. Notify the admins
+            messagingTemplate.convertAndSend(
+                    "/topic/admin",
+                    "The Application fees for the Order (ID: " + order.getId() + ") was collected successfully."
             );
         }
         order.setStatus(orderStatus);
