@@ -115,79 +115,81 @@ public class OrdersService {
         return ResponseEntity.ok().build();
     }
 
+
     @Transactional
-    public ResponseEntity<String> continueCheckout(LocalUser user,long addressID,long orderID,long paymentMethodID) {
+    public ResponseEntity<String> continueCheckout(LocalUser user, long addressID, long orderID, long paymentMethodID) {
+        Orders order = ordersRepository.findById(orderID)
+                .orElseThrow(() -> new IllegalArgumentException("Order not found"));
 
-            Orders order = ordersRepository.findById(orderID)
-                    .orElseThrow(() -> new IllegalArgumentException("Order not found"));
+        // Validation de l'ordre
+        if (!Objects.equals(order.getUser().getId(), user.getId()) ||
+                !order.getStatus().equals(OrderStatus.UNCOMPLETED)) {
+            throw new SecurityException("Order not accessible for checkout");
+        }
 
-            // Ensure the order belongs to the user and is in the right status
-            if (
-                    !Objects.equals(order.getUser().getId(), user.getId())
-                            ||
-                    !order.getStatus().equals(OrderStatus.UNCOMPLETED)
-            )
-                throw new SecurityException("Order not accessible for checkout");
+        // Configuration de l'adresse et du paiement
+        order.setDeliveryAddress(addressService.getAddress(user, addressID));
 
-            // Assign address and payment method
-            order.setDeliveryAddress(addressService.getAddress(user,addressID));
+        PlatformPaymentMethod paymentMethod = platformPaymentMethodRepository
+                .findByIdAndUser(paymentMethodID, user)
+                .orElseThrow(() -> new EntityNotFoundException("No payment method with that id."));
 
-            PlatformPaymentMethod paymentMethod = platformPaymentMethodRepository
-                    .findByIdAndUser(paymentMethodID,user).orElseThrow(
-                            ()-> new EntityNotFoundException("No payment method with that id.")
-                    );
+        long amount = (long) (order.getTotalPrice() * 100);
+        long fee = (long) (amount * 0.1);
 
-            long amount = (long) (order.getTotalPrice() * 100);
-            long fee=(long)(amount*0.1);
-            //create and charge the user for the order
-            try {
-                PaymentIntentCreateParams params = PaymentIntentCreateParams.builder()
-                        .setAmount(amount)
-                        .setCurrency("mad")
-                        .setCustomer(paymentMethod.getStripeCustomerId())
-                        .addPaymentMethodType("card")
-                        .setPaymentMethod(paymentMethod.getStripePaymentMethodId())
-                        .setConfirm(true)
-                        .setOffSession(true)
-                        .putMetadata("orderId", order.getId().toString())
-                        .setApplicationFeeAmount(fee)
-                        .setCaptureMethod(PaymentIntentCreateParams.CaptureMethod.MANUAL)
-                        .setTransferData(
-                                PaymentIntentCreateParams.TransferData.builder()
-                                        .setDestination(order.getRestaurant().getStripeAccountId())
-                                        .build()
-                        )
-                        .build();
+        try {
+            // Configuration des paramètres de PaymentIntent
+            PaymentIntentCreateParams.Builder paramsBuilder = PaymentIntentCreateParams.builder()
+                    .setAmount(amount)
+                    .setCurrency("mad")
+                    .setCustomer(paymentMethod.getStripeCustomerId())
+                    .setPaymentMethod(paymentMethod.getStripePaymentMethodId())
+                    .setConfirm(true)
+                    .setOffSession(true)
+                    .putMetadata("orderId", order.getId().toString())
+                    .setCaptureMethod(PaymentIntentCreateParams.CaptureMethod.MANUAL);
 
-                // 3. Create and DON'T IMMEDIATELY capture (We capture it when the order is delivered)
-                PaymentIntent intent = PaymentIntent.create(params);
-                order.setPaymentIntentId(intent.getId());
-                ordersRepository.save(order);
-
-            } catch (StripeException e)
-            {
-                throw new RuntimeException("Stripe PaymentIntent failed: " + e.getMessage());
+            // Configuration spécifique pour Stripe Connect
+            if (order.getRestaurant().getStripeAccountId() != null) {
+                paramsBuilder.setTransferData(
+                        PaymentIntentCreateParams.TransferData.builder()
+                                .setDestination(order.getRestaurant().getStripeAccountId())
+                                .build()
+                ).setApplicationFeeAmount(fee);
             }
 
-            order.setStatus(OrderStatus.COMPLETED);
-            order.setPaid(true);
+            PaymentIntent intent = PaymentIntent.create(paramsBuilder.build());
+            order.setPaymentIntentId(intent.getId());
             ordersRepository.save(order);
 
-            simpMessagingTemplate.convertAndSend(
-                "/topic/user/" + order.getUser().getId() + "/orderStatusUpdate",
-                "Your Order (ID: " + order.getId() + ") is completed,your will not be charged until your order is delivered.\n)"
-            );
-
-            simpMessagingTemplate.convertAndSend(
-                    "/topic/restaurant/" + order.getRestaurant().getId() + "/orders",
-                    "New Order (ID: " + order.getId() + ") is received."
-            );
-
-            TrackingData trackingData=trackingDataRepository.findByOrder(order).orElseThrow();
-            trackingData.setCompletedAt(LocalDateTime.now());
-            trackingDataRepository.save(trackingData);
-            return ResponseEntity.ok().build();
+        } catch (StripeException e) {
+            throw new RuntimeException("Stripe PaymentIntent failed: " + e.getMessage(), e);
         }
+
+        // Mise à jour de l'ordre
+        order.setStatus(OrderStatus.COMPLETED);
+        order.setPaid(true);
+        ordersRepository.save(order);
+
+        // Envoi des notifications
+        simpMessagingTemplate.convertAndSend(
+                "/topic/user/" + order.getUser().getId() + "/orderStatusUpdate",
+                "Your Order (ID: " + order.getId() + ") is completed, you will not be charged until your order is delivered."
+        );
+
+        simpMessagingTemplate.convertAndSend(
+                "/topic/restaurant/" + order.getRestaurant().getId() + "/orders",
+                "New Order (ID: " + order.getId() + ") is received."
+        );
+
+        // Mise à jour du suivi
+        TrackingData trackingData = trackingDataRepository.findByOrder(order)
+                .orElseThrow();
+        trackingData.setCompletedAt(LocalDateTime.now());
+        trackingDataRepository.save(trackingData);
+
+        return ResponseEntity.ok().build();
+    }
 
     public List<Orders> getPlacedOrders(LocalUser user){
         List<Orders> ordersList = ordersRepository.findAllByUserOrderByOrderDateDesc(userService.getManagedUser(user));

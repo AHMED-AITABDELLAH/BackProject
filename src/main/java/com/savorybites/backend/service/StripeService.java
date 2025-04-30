@@ -165,4 +165,7 @@ public class StripeService {
         return accountLink.getUrl();
     }
 
+    public boolean hasPaymentMethod(LocalUser user) {
+        return platformPaymentMethodRepository.existsByUser(user);
+    }
 }

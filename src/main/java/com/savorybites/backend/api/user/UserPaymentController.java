@@ -7,6 +7,7 @@ import com.savorybites.backend.model.LocalUser;
 import com.savorybites.backend.service.StripeService;
 import com.stripe.exception.StripeException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -61,6 +62,14 @@ public class UserPaymentController {
         return ResponseEntity.ok(stripeService.getPaymentMethods(user).stream().map(PaymentMethodDTO::new).toList());
     }
 
+
+    @GetMapping("/hasPaymentMethod")
+    public ResponseEntity<Boolean> hasPaymentMethod(@AuthenticationPrincipal LocalUser user) {
+        boolean  success = stripeService.hasPaymentMethod(user);
+        return success
+                ? ResponseEntity.ok(true)
+                : ResponseEntity.status(HttpStatus.NO_CONTENT).body(false);
+    }
     /**
      * Mark a card as the default payment method.
      */

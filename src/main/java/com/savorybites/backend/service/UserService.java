@@ -18,6 +18,8 @@ import com.stripe.exception.StripeException;
 import com.stripe.model.Customer;
 import com.stripe.param.CustomerCreateParams;
 import jakarta.transaction.Transactional;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.web.firewall.RequestRejectedException;
@@ -280,6 +282,14 @@ public class UserService {
             return optionalUser.get();
         //TODO idk
         throw new UserNotFoundException();
+    }
+
+    public ResponseEntity<Boolean> hasPersonalDetails(LocalUser user) {
+
+        LocalUser managedUser=getManagedUser(user);
+        if(user.getFirstName()==null || user.getLastName()==null || user.getPhone()==null)
+            return ResponseEntity.ok(true);
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).body(false);
     }
 
 

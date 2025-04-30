@@ -26,6 +26,11 @@ public class UserController {
         return new UserDTO(user);
     }
 
+    @GetMapping("/accountDetails/hasPersonalDetails")
+    public ResponseEntity<Boolean> hasPersonalDetails(@AuthenticationPrincipal LocalUser user){
+        return userService.hasPersonalDetails(user);
+    }
+
     @Transactional
     @PostMapping("/updateAccountDetails")
     public ResponseEntity<Object> updateDetails(@AuthenticationPrincipal LocalUser user,@RequestBody UserDetailsBody userDetailsBody){
