@@ -3,7 +3,7 @@ package com.savorybites.backend.service;
 
 import com.savorybites.backend.api.dto.auth.LoginBody;
 import com.savorybites.backend.api.dto.auth.LoginResponse;
-import com.savorybites.backend.exception.BadAdminCredentialsException;
+import com.savorybites.backend.exception.user.BadAdminCredentialsException;
 import com.savorybites.backend.exception.user.UserNotFoundException;
 import com.savorybites.backend.model.*;
 import com.savorybites.backend.model.verificationModels.VerificationToken;

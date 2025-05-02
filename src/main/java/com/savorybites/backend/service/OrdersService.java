@@ -184,7 +184,7 @@ public class OrdersService {
 
         // Mise à jour du suivi
         TrackingData trackingData = trackingDataRepository.findByOrder(order)
-                .orElseThrow();
+                .orElseThrow(() -> new NoSuchElementException("There is no tracking data"));
         trackingData.setCompletedAt(LocalDateTime.now());
         trackingDataRepository.save(trackingData);
 

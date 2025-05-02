@@ -1,4 +1,4 @@
-package com.savorybites.backend.exception;
+package com.savorybites.backend.exception.user;
 
 import lombok.Getter;
 import lombok.Setter;
