@@ -144,10 +144,10 @@ public class OrdersService {
                     .setCurrency("mad")
                     .setCustomer(paymentMethod.getStripeCustomerId())
                     .setPaymentMethod(paymentMethod.getStripePaymentMethodId())
+                    .setCaptureMethod(PaymentIntentCreateParams.CaptureMethod.MANUAL)
                     .setConfirm(true)
                     .setOffSession(true)
-                    .putMetadata("orderId", order.getId().toString())
-                    .setCaptureMethod(PaymentIntentCreateParams.CaptureMethod.MANUAL);
+                    .putMetadata("orderId", order.getId().toString());
 
             // Configuration spécifique pour Stripe Connect
             if (order.getRestaurant().getStripeAccountId() != null) {
@@ -169,6 +169,7 @@ public class OrdersService {
         // Mise à jour de l'ordre
         order.setStatus(OrderStatus.COMPLETED);
         order.setPaid(true);
+        order.setPaymentDate(LocalDateTime.now());
         ordersRepository.save(order);
 
         // Envoi des notifications
