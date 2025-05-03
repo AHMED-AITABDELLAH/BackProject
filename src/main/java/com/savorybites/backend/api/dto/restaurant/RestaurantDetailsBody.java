@@ -21,7 +21,6 @@ public class RestaurantDetailsBody {
     private String newPassword;
     private double shippingFees;
     private String contactEmail;
-    private String paypalEmail;
     private String profileImg;
     private String profileBanner;
 
