@@ -382,4 +382,9 @@ public class OrdersService {
         return new TrackingDataDTO(order,trackingData);
     }
 
+    public Orders getOrder(LocalUser user, long orderID) {
+        return ordersRepository.findOrderByIdAndUser(orderID,user).orElseThrow(
+                ()->new NoSuchElementException("No Order was found")
+        );
+    }
 }

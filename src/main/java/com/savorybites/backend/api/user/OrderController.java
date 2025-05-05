@@ -56,6 +56,14 @@ public class OrderController {
         return orderItemList.stream().map(OrderItemDTO::new).toList();
     }
 
+    @GetMapping("/placedOrders")
+    public OrderDTO getOrder(@AuthenticationPrincipal LocalUser user,
+                                         @RequestParam long orderID){
+        return new OrderDTO(ordersService.getOrder(user,orderID));
+    }
+
+
+
     @PutMapping("/placedOrders/{orderID}/cancel")
     public ResponseEntity<Object> cancelOrder(@AuthenticationPrincipal LocalUser user,
                                               @PathVariable long orderID) throws StripeException {
