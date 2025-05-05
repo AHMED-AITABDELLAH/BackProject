@@ -134,7 +134,7 @@ public class EmailService {
                         </table>
 
                         <div style="text-align: center; margin: 30px 0;">
-                            <a href="%s/client/orders/track?orderId=%d" style="display: inline-block; background-color: #FD4C2A; color: #ffffff; text-decoration: none; padding: 12px 24px; border-radius: 4px; font-size: 16px; font-weight: 600;">Track Your Order</a>
+                            <a href="%s/client/order/track/%d" style="display: inline-block; background-color: #FD4C2A; color: #ffffff; text-decoration: none; padding: 12px 24px; border-radius: 4px; font-size: 16px; font-weight: 600;">Track Your Order</a>
                         </div>
 
                         <p style="color: #999999; font-size: 14px; text-align: center; border-top: 1px solid #eeeeee; padding-top: 20px; margin-bottom: 0;">

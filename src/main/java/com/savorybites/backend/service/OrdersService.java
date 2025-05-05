@@ -215,7 +215,9 @@ public class OrdersService {
                 order.getStatus()==OrderStatus.ACCEPTED
         ) {
 
-            PaymentIntent cancelledPaymentIntent = cancelPaymentIntent(order.getPaymentIntentId());
+            if(order.isPaid()){
+                PaymentIntent cancelledPaymentIntent = cancelPaymentIntent(order.getPaymentIntentId());
+            }
             order.setStatus(OrderStatus.CANCELLED);
 
             emailService.sendOrderCancelledByUserEmail(user.getUsername(),user.getEmail(),orderID);

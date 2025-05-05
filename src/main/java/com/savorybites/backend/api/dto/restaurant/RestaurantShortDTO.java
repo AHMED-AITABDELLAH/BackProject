@@ -10,12 +10,14 @@ public class RestaurantShortDTO {
     private Long id;
     private String profileImg;
     private String title;
+    private double shippingFees;
 
 
     public RestaurantShortDTO(Restaurant restaurant) {
         this.id = restaurant.getId();
         this.title = restaurant.getTitle();
         this.profileImg = restaurant.getProfileImg();
+        this.shippingFees=restaurant.getShippingFees();
     }
 
 }

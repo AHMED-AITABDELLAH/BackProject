@@ -2,6 +2,7 @@ package com.savorybites.backend.api.user;
 
 import com.savorybites.backend.api.dto.cart.CartItemDTO;
 import com.savorybites.backend.api.dto.food.FoodDTO;
+import com.savorybites.backend.api.dto.user.CartDetails;
 import com.savorybites.backend.model.CartItem;
 import com.savorybites.backend.model.Category;
 import com.savorybites.backend.model.Food;
@@ -88,8 +89,8 @@ public class CartController {
     }
 
     @GetMapping("/total")
-    public double total(@AuthenticationPrincipal LocalUser user){
-        return cartService.getCartTotal(user);
+    public CartDetails total(@AuthenticationPrincipal LocalUser user){
+        return new CartDetails(cartService.getCartTotal(user),cartService.getShippingTotal(user));
     }
 
 }

@@ -1,0 +1,262 @@
+@startuml
+
+!theme plain
+skinparam linetype ortho
+' Explicitly set left-to-right to encourage landscape aspect ratio
+left to right direction
+skinparam classAttributeIconSize 0
+' Increased separation further to stretch the diagram more
+skinparam nodesep 60 ' Increased from 40
+skinparam ranksep 1233 ' Increased from 40
+
+' Define main entities with groupings for layout clarity
+package "Geography" {
+  class REGION {
+    ID: number(19)
+    REGION_NAME: varchar2(255 char)
+  }
+
+  class PROVINCE {
+    ID: number(19)
+    PROVINCE_NAME: varchar2(255 char)
+    REGION_ID: number(19)
+  }
+
+  class COMMUNE {
+    ID: number(19)
+    COMMUNE_NAME: varchar2(255 char)
+    COMMUNE_TYPE: varchar2(255 char)
+    PROVINCE_ID: number(19)
+  }
+}
+
+package "Users" {
+  class LOCAL_USER {
+    ID: number(19)
+    EMAIL: varchar2(255 char)
+    FNAME: varchar2(255 char)
+    IS_VERIFIED: number(1)
+    LNAME: varchar2(255 char)
+    PASSWORD: varchar2(255 char)
+    PHONE: varchar2(255 char)
+    PROFILE_IMG: varchar2(255 char)
+    ROLE: varchar2(255 char)
+    USERNAME: varchar2(255 char)
+    STATUS: varchar2(255 char)
+  }
+
+  class ADMIN {
+    ID: number(19)
+    EMAIL: varchar2(255 char)
+    PASSWORD: varchar2(255 char)
+    ROLE: varchar2(255 char)
+  }
+
+  class COURIER {
+    ID: number(19)
+    EMAIL: varchar2(255 char)
+    FULLNAME: varchar2(255 char)
+    IS_AVAILABLE: number(1)
+    PROFILE_IMG: varchar2(255 char)
+    RESTAURANT_ID: number(19)
+    PHONE: varchar2(255 char)
+  }
+}
+
+package "Restaurant" {
+  class RESTAURANT {
+    ID: number(19)
+    CONTACT_EMAIL: varchar2(255 char)
+    EMAIL: varchar2(255 char)
+    IS_APPROVED: number(1)
+    IS_VERIFIED: number(1)
+    PASSWORD: varchar2(255 char)
+    PHONE: varchar2(255 char)
+    PROFILE_BANNER: varchar2(255 char)
+    PROFILE_IMG: varchar2(255 char)
+    ROLE: varchar2(255 char)
+    SHIPPING_FEES: float(53)
+    TITLE: varchar2(255 char)
+    ADDRESS_ID: number(19)
+    STATUS: varchar2(255 char)
+    DESCRIPTION: varchar2(255 char)
+    STRIPE_ACCOUNT_ID: varchar2(255 char)
+    IS_SETUP_COMPLETED: number(1)
+  }
+
+  class FOOD {
+    ID: number(19)
+    DESCRIPTION: varchar2(255 char)
+    DISCOUNT: number(10)
+    DISCOUNTED_PRICE: float(53)
+    IMAGE: varchar2(255 char)
+    IS_AVAILABLE: number(1)
+    PRICE: float(53)
+    TITLE: varchar2(255 char)
+    RESTAURANT_ID: number(19)
+    IS_FLAGGED: number(1)
+    SOLD: number(19)
+    STATUS: varchar2(255 char)
+  }
+
+  class CATEGORY {
+    ID: number(19)
+    CATEGORY_ICON: varchar2(255 char)
+    CATEGORY_IMAGE: varchar2(255 char)
+    TITLE: varchar2(255 char)
+  }
+
+  ' Junction Table for Many-to-Many between FOOD and CATEGORY
+  class FOOD_CATEGORIES {
+    FOOD_ID: number(19)
+    CATEGORY_ID: number(19)
+  }
+}
+
+package "Order" {
+  class CART {
+    CART_ID: number(19)
+    USER_ID: number(19)
+  }
+
+  class CART_ITEM {
+    ID: number(19)
+    QUANTITY: number(10)
+    TOTAL: float(53)
+    CART_ID: number(19)
+    FOOD_ID: number(19)
+  }
+
+  class ORDERS {
+    ID: number(19)
+    IS_PAID: number(1)
+    ORDER_DATE: timestamp(6)
+    PAYMENT_DATE: timestamp(6)
+    STATUS: varchar2(255 char)
+    TOTAL_PRICE: float(53)
+    ADDRESS_ID: number(19)
+    RESTAURANT_ID: number(19)
+    USER_ID: number(19)
+    COURIER_ID: number(19)
+    PAYMENT_INTENT_ID: varchar2(255 char)
+  }
+
+  class ORDER_ITEM {
+    ID: number(19)
+    PRICE: float(53)
+    QUANTITY: number(10)
+    FOOD_ID: number(19)
+    ORDER_ID: number(19)
+  }
+
+  class TRACKING_DATA {
+    ID: number(19)
+    ACCEPTED_AT: timestamp(6)
+    DELIVERED_AT: timestamp(6)
+    PICKED_UP_AT: timestamp(6)
+    PREPARATION_STARTED_AT: timestamp(6)
+    COURIER_ID: number(19)
+    ORDER_ID: number(19)
+    COMPLETED_AT: timestamp(6)
+  }
+}
+
+package "Security" {
+  class BLACKLISTED_TOKEN {
+    ID: number(19)
+    EXPIRY_DATE: timestamp(6) with time zone
+    TOKEN: varchar2(255 char)
+  }
+
+  class VERIFICATION_TOKEN {
+    ID: number(19)
+    EXPIRY_DATE: timestamp(6) with time zone
+    TOKEN: varchar2(255 char)
+    RESTAURANT_ID: number(19)
+    USER_ID: number(19)
+  }
+
+  class PASSWORD_RESET_TOKEN {
+    ID: number(19)
+    EXPIRY_DATE: timestamp(6) with time zone
+    TOKEN: varchar2(255 char)
+    RESTAURANT_ID: number(19)
+    LOCAL_USER_ID: number(19)
+  }
+}
+
+package "Payment" {
+  class PAYMENT_METHOD {
+    ID: number(19)
+    BRAND: varchar2(255 char)
+    EXP_MONTH: number(19)
+    EXP_YEAR: number(19)
+    IS_DEFAULT: number(1)
+    LAST4: varchar2(255 char)
+    STRIPE_CUSTOMER_ID: varchar2(255 char)
+    STRIPE_PAYMENT_METHOD_ID: varchar2(255 char)
+    USER_ID: number(19)
+  }
+}
+
+' ADDRESS is central, linking Geography, Users, and Restaurants
+class ADDRESS {
+  ADDRESS_ID: number(19)
+  IS_COORDINATION_ACTIVATED: number(1)
+  IS_DEFAULT: number(1)
+  LATITUDE: float(53)
+  LONGITUDE: float(53)
+  STREET: varchar2(255 char)
+  TITLE: varchar2(255 char)
+  COMMUNE_ID: number(19)
+  PROVINCE_ID: number(19)
+  REGION_ID: number(19)
+  USER_ID: number(19) ' Can belong to a user
+  ' RESTAURANT_ID implicitly linked via RESTAURANT.ADDRESS_ID
+}
+
+' --- Relationships ---
+
+' Geography Structure
+PROVINCE --> REGION : part of
+COMMUNE --> PROVINCE : part of
+
+' Address Relationships
+ADDRESS --> REGION : located in >
+ADDRESS --> PROVINCE : located in >
+ADDRESS --> COMMUNE : located in >
+LOCAL_USER "1" *-- "0..*" ADDRESS : has
+RESTAURANT "1" *-- "1" ADDRESS : located at
+
+' User Relationships
+LOCAL_USER "1" -- "1" CART : has
+' COURIER is associated with RESTAURANT and ORDERS
+
+' Restaurant Relationships
+RESTAURANT "1" *-- "0..*" FOOD : offers
+FOOD "many" o-- "many" CATEGORY : (FOOD_CATEGORIES)
+COURIER --> RESTAURANT : works for (optional) >
+
+' Order Relationships
+CART "1" *-- "0..*" CART_ITEM : contains
+CART_ITEM ..> FOOD : references
+ORDERS "1" *-- "1..*" ORDER_ITEM : contains
+ORDER_ITEM ..> FOOD : references
+ORDERS --> LOCAL_USER : placed by >
+ORDERS --> RESTAURANT : placed to >
+ORDERS --> ADDRESS : delivery to >
+ORDERS "1" -- "0..1" COURIER : assigned to
+ORDERS "1" -- "1" TRACKING_DATA : has tracking >
+TRACKING_DATA --> COURIER : tracked by >
+
+' Security Relationships
+VERIFICATION_TOKEN ..> LOCAL_USER : verifies (optional) >
+VERIFICATION_TOKEN ..> RESTAURANT : verifies (optional) >
+PASSWORD_RESET_TOKEN ..> LOCAL_USER : resets for (optional) >
+PASSWORD_RESET_TOKEN ..> RESTAURANT : resets for (optional) >
+' BLACKLISTED_TOKEN is standalone or system-level
+
+' Payment Relationships
+LOCAL_USER "1" *-- "0..*" PAYMENT_METHOD : owns
+
+@enduml

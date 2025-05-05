@@ -123,7 +123,7 @@ public class CartService {
         Optional<Cart> optionalUserCart= cartRepository.findByUser(user);
 
         if(optionalUserCart.isEmpty())
-            throw  new RuntimeException();//TODO CREATE EXCEPTION
+            return 0.0;
 
         Cart userCart=optionalUserCart.get();
         List<CartItem> userItems =cartItemRepository.findAllByCart(userCart);
@@ -134,6 +134,15 @@ public class CartService {
             sum+=item.getTotalPrice();
         }
         return sum;
+    }
+
+    public double getShippingTotal(LocalUser user){
+        List<CartItem> cartItems = getCartContents(user);
+        return cartItems.stream()
+                .map(item -> item.getFood().getRestaurant())
+                .distinct()
+                .mapToDouble(Restaurant::getShippingFees)
+                .sum();
     }
 
 
