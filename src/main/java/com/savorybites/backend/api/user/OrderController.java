@@ -56,7 +56,7 @@ public class OrderController {
         return orderItemList.stream().map(OrderItemDTO::new).toList();
     }
 
-    @GetMapping("/placedOrders")
+    @GetMapping("/placedOrder")
     public OrderDTO getOrder(@AuthenticationPrincipal LocalUser user,
                                          @RequestParam long orderID){
         return new OrderDTO(ordersService.getOrder(user,orderID));
