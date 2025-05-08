@@ -14,6 +14,7 @@ public class RestaurantDTO {
     private String title;
     private String phone;
     private AddressShortDTO addressShortDTO;
+    private String email;
     private double shippingFees;
     private String contactEmail;
     private String profileImg;
@@ -25,6 +26,7 @@ public class RestaurantDTO {
         this.id = restaurant.getId();
         this.title = restaurant.getTitle();
         this.phone = restaurant.getPhone();
+        this.email= restaurant.getEmail();
         this.addressShortDTO=new AddressShortDTO(restaurant.getAddress());
         this.contactEmail= restaurant.getContactEmail();
         this.shippingFees = restaurant.getShippingFees();
