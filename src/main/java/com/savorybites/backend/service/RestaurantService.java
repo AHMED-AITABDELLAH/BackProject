@@ -182,46 +182,58 @@ public class RestaurantService {
 
 
     public ResponseEntity<Object> update(Restaurant restaurant, RestaurantDetailsBody restaurantDetailsBody) {
-
-        restaurant.setProfileImg(restaurantDetailsBody.getProfileImg());
-        restaurant.setProfileBanner(restaurantDetailsBody.getProfileBanner());
-        restaurant.setTitle(restaurantDetailsBody.getTitle());
-        restaurant.setDescription(restaurantDetailsBody.getDescription());
-        restaurant.setPhone(restaurantDetailsBody.getPhone());
-        restaurant.setShippingFees(restaurantDetailsBody.getShippingFees());
-
-        restaurant.setContactEmail(restaurantDetailsBody.getContactEmail());
-
-        Optional<Restaurant> optionalRestaurant =restaurantRepository.findByEmailIgnoreCase(restaurant.getEmail());
-
-        if(
-                optionalRestaurant.isPresent()
-                &&
-                !Objects.equals(optionalRestaurant.get().getEmail(), restaurantDetailsBody.getEmail())
-        )
+    // Update basic restaurant details
+    restaurant.setProfileImg(restaurantDetailsBody.getProfileImg());
+    restaurant.setProfileBanner(restaurantDetailsBody.getProfileBanner());
+    restaurant.setTitle(restaurantDetailsBody.getTitle());
+    restaurant.setDescription(restaurantDetailsBody.getDescription());
+    restaurant.setPhone(restaurantDetailsBody.getPhone());
+    restaurant.setShippingFees(restaurantDetailsBody.getShippingFees());
+    restaurant.setContactEmail(restaurantDetailsBody.getContactEmail());
+    
+    // Handle email update - only check for uniqueness if email is actually changing
+    String newEmail = restaurantDetailsBody.getEmail();
+    if (newEmail != null && !newEmail.equals(restaurant.getEmail())) {
+        Optional<Restaurant> existingRestaurantWithEmail = restaurantRepository.findByEmailIgnoreCase(newEmail);
+        if (existingRestaurantWithEmail.isPresent()) {
             throw new UserAlreadyExistsException();
-
-        restaurant.setEmail(restaurantDetailsBody.getEmail());
-
-
-
-        if(!restaurantDetailsBody.getOldPassword().isBlank() && !restaurantDetailsBody.getNewPassword().isBlank()){
-
-            if(!encryptionService.verifyPassword(restaurantDetailsBody.getOldPassword(),restaurant.getPassword()))
-                throw new PasswordIncorrectException();
-
-            restaurant.setPassword(encryptionService.encryptPassword(restaurantDetailsBody.getNewPassword()));
-
         }
-
-        restaurantRepository.save(restaurant);
-
-        return ResponseEntity.ok("Your Account Details Have Been Updated Successfully");
-
-
-
-
+        restaurant.setEmail(newEmail);
     }
+    
+    // Handle password update if provided
+    String oldPassword = restaurantDetailsBody.getOldPassword();
+    String newPassword = restaurantDetailsBody.getNewPassword();
+    
+    if (oldPassword != null && !oldPassword.isBlank() && 
+        newPassword != null && !newPassword.isBlank()) {
+        
+        if (!encryptionService.verifyPassword(oldPassword, restaurant.getPassword())) {
+            throw new PasswordIncorrectException();
+        }
+        
+        restaurant.setPassword(encryptionService.encryptPassword(newPassword));
+    }
+    
+    // Handle address update if provided
+    if (restaurantDetailsBody.getAddressRegistrationBody() != null) {
+        Address address = restaurant.getAddress();
+        if (address == null) {
+            address = new Address();
+            address.setRestaurant(restaurant);
+            restaurant.setAddress(address);
+        }
+        
+        addressService.addAddress(restaurant, 
+                                 restaurantDetailsBody.getAddressRegistrationBody(), 
+                                 address);
+    }
+    
+    // Save the updated restaurant
+    restaurantRepository.save(restaurant);
+    
+    return ResponseEntity.ok("Your Account Details Have Been Updated Successfully");
+}
 
     public Restaurant getManagedRestaurant(Restaurant restaurant){
         Optional<Restaurant> optionalRestaurant=restaurantRepository.findRestaurantById(restaurant.getId());
